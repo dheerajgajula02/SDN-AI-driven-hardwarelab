@@ -102,12 +102,12 @@
    STATUS DATA: the only part that changes. Updated at the end of each step.
    status: done | virtual | active | todo | labday
    ====================================================================== */
-const UPDATED = '2026-11-07, after Step 9 (Part A complete in the virtual lab)';
+const UPDATED = '2026-11-07, after Step 10 (Part B collector)';
 const DUE = new Date('2026-11-30T23:59:00');
 
 const NOW = {
-  step: 'Part B: AI operations layer (B1–B5). First: propose B4 to the TA',
-  why: 'All of Part A passes in the virtual lab (A1–A6, 102 automated checks). Next: NSOT validator + REST collector + LLM client with cost log, then B1–B5.',
+  step: 'Part B step 2: LLM client (schema check, retries, cost log, call cap), then the B1 analyst',
+  why: 'The REST collector reads flows, rates, drop/unauthorized rules and link state from every switch (16/16 checks). Waiting for the new LLM API key; B4 proposal to the TA pending.',
 };
 
 const STATUS = {
@@ -125,7 +125,7 @@ const OBJECTIVES = [
   {part: 'A', id: 'A4', name: 'DHCP to router, unicast',        pts: 6,  status: 'virtual', note: 'unicast frame to r1 at the edge, 0 floods, lease OK; UI /lab9/dhcp/ui'},
   {part: 'A', id: 'A5', name: 'SDN trace + in/out ports',       pts: 8,  status: 'virtual', note: 'reads real flow tables via REST; CLI trace_cli.py, /lab9/trace, Path trace tab'},
   {part: 'A', id: 'A6', name: 'REST for all apps',              pts: 8,  status: 'virtual', note: 'DNS, DHCP, trace, NSOT summary on :8080; test_rest_api.py 22/22'},
-  {part: 'B', id: 'B1', name: 'AI network analyst',             pts: 8,  status: 'todo',    note: ''},
+  {part: 'B', id: 'B1', name: 'AI network analyst',             pts: 8,  status: 'active',  note: 'collector done (REST only, vendor-neutral); model + planted issues next'},
   {part: 'B', id: 'B2', name: 'Intent controller',              pts: 9,  status: 'todo',    note: 'NSOT ready as the validator'},
   {part: 'B', id: 'B3', name: 'Closed-loop responder (+3)',     pts: 10, status: 'todo',    note: 'automatic link-failure response already works (Step 4)'},
   {part: 'B', id: 'B4', name: 'Advanced technique',             pts: 8,  status: 'todo',    note: 'propose to TA early'},
@@ -143,7 +143,7 @@ const STEPS = [
   {id: '4',   name: 'Redundant link + failover',                   status: 'done',    detail: 'controller-side STP: standby blocked; link cut → 0 pings lost (Mininet), 0 duplicates'},
   {id: '5',   name: 'Management network isolation',                status: 'done',    detail: 'out-of-band 10.224.0.0/16 in NSOT; loader/drift guardrails + live host isolation verified'},
   {id: '6',   name: 'Part A apps: DNS, DHCP, trace, REST',          status: 'done',    detail: 'A3–A6 built and verified (Steps 6–9); learning-rule bug found and fixed'},
-  {id: '7',   name: 'Part B AI layer',                             status: 'active',  detail: 'B1–B5; gap analysis vs Labs 6–8 done'},
+  {id: '7',   name: 'Part B AI layer',                             status: 'active',  detail: 'B1–B5; collector done (Step 10)'},
   {id: 'L',   name: 'Lab day: port to hardware',                   status: 'labday',  detail: 'real DPIDs/ports/IPs in the NSOT, vendor drivers, cabling'},
 ];
 

@@ -1,0 +1,28 @@
+PASS  C1 all 6 NSOT switches reported connected, none missing or unknown
+        {'connected': ['arista1', 'arista2', 'cisco1', 'hp1', 'ovs1', 'ovs2'], 'missing': [], 'unknown_dpids': []}
+PASS  C1 the 4 hardware switches are cisco1, arista1, arista2, hp1
+        ['arista1', 'arista2', 'cisco1', 'hp1']
+PASS  C2 rule count per switch equals ovs-ofctl dump-flows (+-1 for expiring rules)
+        collector {'arista1': 5, 'arista2': 3, 'cisco1': 7, 'hp1': 5, 'ovs1': 3, 'ovs2': 3} | ovs-ofctl {'arista1': 5, 'arista2': 3, 'cisco1': 7, 'hp1': 5, 'ovs1': 3, 'ovs2': 3}
+PASS  C2 every rule has a known owner (no unauthorized rules on a clean network)
+        ['dhcp_intercept', 'dns_intercept', 'learned', 'table_miss']
+PASS  C2 control: no drop rules on a clean network
+PASS  C3 control: pc1's port (arista1:2) is idle (< 5 pps)
+        {'to': 'pc1', 'valid': True, 'rx_pps': 0.0, 'tx_pps': 0.0, 'rx_dropped': 0, 'tx_dropped': 0, 'errors': 0, 'rx_total': 130, 'tx_total': 137}
+PASS  C3 flood measured on arista1:2 within 20% of ping's own rate (83 pps)
+        collector rx 83.4 pps, tx 83.4 pps | ping sent 1000 in 12014 ms
+PASS  C3 the busiest rule on arista1 names the sender (eth_src = pc1)
+        {'dl_dst': '00:00:00:00:01:01', 'in_port': 2, 'dl_vlan': '0x0000', 'dl_src': '00:00:00:00:10:11'} at 81.3 pps
+PASS  C4 control: every NSOT link is up
+PASS  C4 standby link cut: reported down and marked standby, every other link up
+        down (arista1 port 4 down, arista2 port 4 down)
+PASS  C4 standby link restored: reported up again
+PASS  C5 main link cisco1-arista2 cut: reported down; standby up and now carrying traffic
+        main down (cisco1 port 3 down, arista2 port 1 down) | standby up, 2 rules use it
+PASS  C5 restored: all links up
+PASS  C6 planted drop rule (cookie 0x99) on hp1: found as a drop rule AND as unauthorized
+        [{'priority': 30, 'cookie': 153, 'owner': 'unauthorized', 'match': {'dl_type': 2048, 'nw_dst': '10.10.20.250'}, 'actions': [], 'drop': True, 'packets': 0, 'bytes': 0, 'age_s': 3, 'idle_timeout': 0, 'hard_timeout': 0, 'pps': 0.0}]
+PASS  C6 nothing else flagged on the other switches
+PASS  C6 removed again: no drop or unauthorized rules anywhere
+
+16/16 checks passed

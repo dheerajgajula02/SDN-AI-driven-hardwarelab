@@ -34,6 +34,16 @@
     "table_miss":     {"priority": 0,  "cookie": 0,  "match": {}}
   },
 
+  "flow_cookies": {
+    "_about": "Who owns a flow rule, by its OpenFlow cookie (decimal). A rule with any other cookie was not installed by our apps: an unauthorized flow (Part B). 176/177 = 0xB0/0xB1 are reserved for the AI layer.",
+    "0":   "table_miss",
+    "16":  "learned",
+    "48":  "dns_intercept",
+    "64":  "dhcp_intercept",
+    "176": "ai_intent",
+    "177": "ai_response"
+  },
+
   "vlans": {
     "10": {"name": "users",   "subnet": "10.10.10.0/24", "gateway": "10.10.10.1"},
     "20": {"name": "servers", "subnet": "10.10.20.0/24", "gateway": "10.10.20.1"}

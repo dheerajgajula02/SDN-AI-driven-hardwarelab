@@ -1188,3 +1188,61 @@ Content-Type header** (`Response(headers=...)` replaces all headers). Shared
 
 Controller log: 0 errors. Left as found: filter on, forcing on, blocklist
 unchanged, links up, network running in tmux `lab9`.
+
+---
+
+## Step 10: Part B step 1, the network-state collector (`part_b/collector.py`)
+
+### Goal
+
+B1 (and later B3) need live state from the devices: flow tables, port
+rates, drop rules, link status. No model is involved in this step.
+
+### Design
+
+- **REST only, through the controller** (`/stats/switches`, `/stats/flow`,
+  `/stats/port`, `/stats/portdesc`). Labs 6/8 used ssh + `ovs-ofctl`, which only
+  works on OVS; REST works for every OpenFlow switch (Arista, HP, Cisco) and
+  keeps "one controller path".
+- Names, wiring, standby links and rule owners come from the NSOT. New NSOT
+  section `flow_cookies`: cookie -> owner (`0` table-miss, `16` learned, `48` DNS,
+  `64` DHCP, `176`/`177` reserved for AI intents/responses). Any other cookie =
+  **unauthorized**.
+- Flows and port counters are read twice (default 2 s apart): packets/s per
+  port **and per rule** (the rule names the sender's MAC). Missing port or
+  counter reset = "invalid" with a reason, never 0 (Lab 8 rule).
+- Link state per NSOT link from both ends (OpenFlow `LINK_DOWN` state or
+  `PORT_DOWN` config), plus how many learned rules use each link (a standby
+  link carrying traffic = the main path failed).
+- Standard library only, no f-strings: runs on the laptop (3.14) and on the
+  controller (3.5.2, default address from the NSOT).
+- Found: every switch reports **no meter support** (`/stats/meterfeatures`:
+  `max_meter 0`) -> B3 rate limiting needs a fallback.
+
+### Usage
+
+```
+python3 part_b/collector.py --controller 100.110.3.67:8080          # summary
+python3 part_b/collector.py --controller 100.110.3.67:8080 --json   # full snapshot
+```
+
+### Tests (`part_b/tests/test_collector.py`, 16/16, first run)
+
+Each check compares with an independent source and has a control.
+
+| Check | Independent source | Result |
+|---|---|---|
+| 6 switches connected, 4 hardware (cisco1, arista1, arista2, hp1) | NSOT | pass |
+| rule count per switch | `ovs-ofctl dump-flows` (5/3/7/5/3/3 both) | pass |
+| every rule owned, no drops on a clean network (control) | | pass |
+| idle port < 5 pps (control), then a ping flood | ping's own count: 1000 in 12.0 s = 83 pps; collector **83.4 pps** | pass |
+| busiest rule on arista1 names the sender | `dl_src` = pc1, 81.3 pps | pass |
+| standby link cut / restored | `ip link set arista2-eth4 down` | pass |
+| main link cisco1-arista2 cut: down, standby carries 2 rules; restored | | pass |
+| planted drop rule (cookie 0x99) on hp1: drop + unauthorized, nowhere else; removed | REST add/delete | pass |
+
+Evidence: `logs/stepB1_collector/test_collector_run1.txt`. Controller log 0
+errors; everything restored.
+
+Physical equivalent: same code; only the NSOT (DPIDs, ports) changes. The
+rate test needs a host that can ping fast (`ping -i 0.01` needs root).
