@@ -1,0 +1,37 @@
+PASS  L1 good answer: returned, 1 request, not repaired
+PASS  L1 cost log: 1 HTTP line with tokens + cost, 1 "valid" verdict line
+        [{'attempt': 'answer1/http1', 'completion_tokens': 20, 'cost_usd': 0.0001, 'model': 'test-model-from-env', 'prompt_chars': 648, 'prompt_sha1': '605fb61d3d4c', 'prompt_tokens': 100, 'purpose': 'test', 'reasoning_tokens': None, 'run': 'lab9-e68dc8636db047d8917b16f2f253d4d6', 'seconds': 0.0, 'status': 200, 'time': '2026-11-07T11:50:58.087682'}]
+PASS  L1 the log never contains the API key or the prompt text
+PASS  L1 the key is sent to the server (Authorization header)
+PASS  L1 the model is shown the schema (field names + allowed values in the system prompt)
+PASS  L1 the request uses the model from the settings
+PASS  L2 HTTP 429 then OK: retried, answer returned, 2 requests logged
+PASS  L3 HTTP 401 (bad key): fails at once, no retry (1 request)
+        model request failed: HTTP 401: {"error": "fake 401"}
+PASS  L4 schema failure then fixed: repaired=True, 2 requests
+PASS  L4 the repair request shows the model its exact error
+        Your answer was rejected by the validator:
+- answer.health: 'fine' is not one of ['ok', 'degraded']
+Send the corrected J
+PASS  L5 invalid twice (extra field "action"): LLMError, only 2 requests
+        answer still invalid after a repair try: answer: unexpected field "action"
+PASS  L6 answer inside a ```json fence is accepted
+PASS  L6 prose instead of JSON: rejected after the repair try
+        answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)
+PASS  L7 extra_check rejects an unknown host, the repair fixes it
+PASS  L8 call cap 2: two 500s, the third request is never sent (cap reached)
+        call cap reached (2 calls this run, LAB9_LLM_MAX_CALLS)
+PASS  L9 kill switch file present: refused, 0 requests reached the server
+        kill switch: /tmp/tmpuw_vrri2 exists, no model calls allowed
+PASS  L9b settings are read from .env (key, model, base URL; quotes and trailing / handled)
+        {'key': '<hidden>', 'base_url': 'https://example.test/v1', 'model': 'some-other-model', 'max_calls': 60}
+PASS  L9b no model in .env: refused with a clear message (nothing is guessed)
+        missing in lab9/.env: LAB9_LLM_MODEL (see .env.example)
+PASS  L10 schema: true is not an integer, 1.5 is not, 0 is below the minimum, 3 is fine
+PASS  LIVE real model returns a schema-valid answer
+        {'health': 'ok', 'issues': []}  (1 call)
+PASS  LIVE team cost log (logs/api_calls.jsonl) has tokens and a cost
+        {'attempt': 'answer1/http1', 'completion_tokens': 37, 'cost_usd': 4.95e-05, 'model': 'deepseek-v4.1-flash', 'prompt_chars': 675, 'prompt_sha1': '915a1566b355', 'prompt_tokens': 182, 'purpose': 'test_llm_client', 'reasoning_tokens': 26, 'run': 'lab9-e68dc8636db047d8917b16f2f253d4d6', 'seconds': 1.75, 'status': 200, 'time': '2026-11-07T11:50:58.104882'}
+PASS  LIVE the real key is not in the cost log
+
+22/22 checks passed

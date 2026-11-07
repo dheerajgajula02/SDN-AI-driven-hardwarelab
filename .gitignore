@@ -20,3 +20,4 @@ venv/
 *.swp
 .DS_Store
 ~$*.docx
+part_b/STOP

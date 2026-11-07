@@ -1246,3 +1246,48 @@ errors; everything restored.
 
 Physical equivalent: same code; only the NSOT (DPIDs, ports) changes. The
 rate test needs a host that can ping fast (`ping -i 0.01` needs root).
+
+---
+
+## Step 11: Part B step 2, the LLM client (`part_b/llm_client.py`)
+
+### Goal
+
+One door to the model for B1, B2 and B3, enforcing "never trust model
+output", the B5 cost log and the API budget in one place.
+
+### Design
+
+- **Settings only in `lab9/.env`** (git-ignored; template `.env.example`):
+  `LAB9_LLM_API_KEY`, `LAB9_LLM_MODEL` (team choice `deepseek-v4.1-flash`),
+  `LAB9_LLM_BASE_URL` (opencode Go), optional `LAB9_LLM_MAX_CALLS`. All three
+  required; nothing guessed. Any OpenAI-compatible endpoint works.
+- `call_llm(purpose, system, user, schema, extra_check)`: the schema is shown
+  to the model; the answer must be JSON, pass the schema (own small checker,
+  standard library) and the caller's own checks (e.g. "names must exist in the
+  NSOT"). One repair try with the exact errors; second failure = `LLMError`,
+  so callers never act on an unchecked answer.
+- HTTP: retries only 408/429/5xx (1 s, 2 s); 400/401 fail at once. Headers:
+  User-Agent (Cloudflare refuses Python's default, error 1010) and
+  `x-opencode-session` (one id per run).
+- Cost log `logs/api_calls.jsonl`: one line per HTTP call (time, run, purpose,
+  model, status, seconds, tokens incl. reasoning, `cost_usd` from opencode's
+  `list_cost`) plus one verdict line per answer (valid, errors). Never the key
+  or prompt text (only size + short fingerprint).
+- Budget: cap per run (default 60, counted before sending) and a kill switch:
+  if `part_b/STOP` exists no call is made.
+
+### Tests (`part_b/tests/test_llm_client.py`, 22/22)
+
+19 offline checks against a fake model server (free, every failure on
+purpose): good answer; 429 retried; 401 not retried; wrong answer repaired
+with its exact error shown; invalid twice refused; fenced JSON accepted, prose
+refused; extra_check; cap stops the 3rd request before sending; kill switch =
+0 requests; settings from `.env`, missing model refused; schema edge cases;
+key and prompt never in the log. 3 live checks: real valid answer, tokens +
+cost logged, real key not in the log.
+
+Two problems found on the way, both in `docs/B5_FAILURE_LOG.md` (#1 schema not
+shown to the model, #2 missing session header).
+
+Cost so far: 5 HTTP calls, $0.00026.

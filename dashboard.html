@@ -102,12 +102,12 @@
    STATUS DATA: the only part that changes. Updated at the end of each step.
    status: done | virtual | active | todo | labday
    ====================================================================== */
-const UPDATED = '2026-11-07, after Step 10 (Part B collector)';
+const UPDATED = '2026-11-07, after Step 11 (LLM client)';
 const DUE = new Date('2026-11-30T23:59:00');
 
 const NOW = {
-  step: 'Part B step 2: LLM client (schema check, retries, cost log, call cap), then the B1 analyst',
-  why: 'The REST collector reads flows, rates, drop/unauthorized rules and link state from every switch (16/16 checks). Waiting for the new LLM API key; B4 proposal to the TA pending.',
+  step: 'Part B step 3: B1 analyst (prompt, planted issues, found/missed scorer)',
+  why: 'Collector (16/16) and LLM client (22/22: schema check + repair, retries, cost log, call cap, kill switch) done. B4 proposal to the TA pending.',
 };
 
 const STATUS = {
