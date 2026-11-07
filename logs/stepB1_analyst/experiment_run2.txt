@@ -1,0 +1,38 @@
+capturing clean_1 ...
+capturing clean_2 ...
+capturing planted_1 ...
+capturing planted_2 ...
+clean_1    v1_plain/off           health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   42.4s
+clean_1    v1_plain/low           health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   50.0s
+clean_1    v2_context/off         health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1    8.3s
+clean_1    v2_context/low         health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   28.2s
+clean_1    v3_checklist/off       health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1    6.5s
+clean_1    v3_checklist/low       health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   10.3s
+clean_2    v1_plain/off           health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   25.8s
+clean_2    v1_plain/low           health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   24.5s
+clean_2    v2_context/off         health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   44.2s
+clean_2    v2_context/low         health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 2  131.5s
+clean_2    v3_checklist/off       health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   10.7s
+clean_2    v3_checklist/low       health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1   13.9s
+planted_1  v1_plain/off           health=critical  found 3/4  downplayed 1  missed 0  false alarms 0  calls 1   25.7s
+planted_1  v1_plain/low           health=critical  found 3/4  downplayed 1  missed 0  false alarms 0  calls 1   79.5s
+planted_1  v2_context/off         health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   19.9s
+planted_1  v2_context/low         health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   70.5s
+planted_1  v3_checklist/off       health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   16.2s
+planted_1  v3_checklist/low       health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   45.9s
+planted_2  v1_plain/off           health=critical  found 3/4  downplayed 1  missed 0  false alarms 0  calls 1   20.3s
+planted_2  v1_plain/low           health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   56.8s
+planted_2  v2_context/off         health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   46.5s
+planted_2  v2_context/low         health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   57.6s
+planted_2  v3_checklist/off       health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   18.4s
+planted_2  v3_checklist/low       health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 1   51.9s
+
+prompt/reasoning       found  missed  downplayed  false_alarms  invalid  calls    cost   avg s
+v1_plain/off               6       0           2             0        0      4  $0.0041   28.6
+v1_plain/low               7       0           1             0        0      4  $0.0122   52.7
+v2_context/off             8       0           0             0        0      4  $0.0042   29.7
+v2_context/low             8       0           0             0        0      5  $0.0094   72.0
+v3_checklist/off           8       0           0             0        0      4  $0.0049   12.9
+v3_checklist/low           8       0           0             0        0      4  $0.0081   30.5
+
+best prompt/reasoning: v2_context/off

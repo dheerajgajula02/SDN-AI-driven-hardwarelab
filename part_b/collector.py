@@ -317,6 +317,13 @@ def collect_network_state(nsot, base, sample_seconds=2.0):
     tables = flow_rates(flows1, flows2, seconds)
     links, port_state = collect_links(nsot, base, names, tables)
 
+    # Step 4: the controller's TCP sensor (new connections per source host,
+    #         last 60 s). None if this controller has no sensor.
+    try:
+        sensor = rest_get(base, '/lab9/sensor')
+    except Exception:
+        sensor = None
+
     return {
         'collected_at': started.isoformat(),
         'controller': base,
@@ -331,6 +338,9 @@ def collect_network_state(nsot, base, sample_seconds=2.0):
         'port_rates': rates,
         'port_state': port_state,
         'links': links,
+        'tcp_sensor': sensor,
+        # switches + (2 flow + 2 port + 1 portdesc) per switch + sensor
+        'rest_calls': 1 + 5 * len(names) + 1,
     }
 
 
@@ -369,7 +379,11 @@ def summary_lines(state):
                       for n, ports in state['port_rates'].items() for p, r in ports.items()
                       if p != '_seconds' and r.get('valid') and r['rx_pps'] + r['tx_pps'] >= 1),
                      key=lambda x: -x[0])[:3]
-    # Step 4: the three busiest ports (only ports with real traffic).
+    # Step 4: TCP sensor: sources that opened connections in the last 60 s.
+    for ip, src in sorted(((state.get('tcp_sensor') or {}).get('sources') or {}).items()):
+        out.append('tcp sensor: %s (%s) opened %d connections to %d ports on %s' % (
+            src['host'], ip, src['new_connections'], src['distinct_dst_ports'], ', '.join(src['dst_hosts'])))
+    # Step 5: the three busiest ports (only ports with real traffic).
     for total, n, p, r in busiest:
         out.append('busy port %s:%s (to %s): rx %.1f pps, tx %.1f pps' % (n, p, r['to'], r['rx_pps'], r['tx_pps']))
     return out

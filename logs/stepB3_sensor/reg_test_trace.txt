@@ -1,0 +1,50 @@
+PASS  T1 refuses unknown host (pc9 -> srv1): HTTP 400 with a reason
+        "pc9" is not a host in the NSOT or an IP address
+PASS  T1 refuses same host (pc1 -> pc1): HTTP 400 with a reason
+        source and destination are the same host
+PASS  T1 refuses IP inside a VLAN that is no host (pc1 -> 10.10.20.99): HTTP 400 with a reason
+        10.10.20.99 is inside a VLAN but is not a host in the NSOT
+PASS  T2 with no learned rules, the trace stops at the first switch and says why
+        arista1 has no rule yet: only "send to the controller" matches. Run a ping from pc1 to srv1 so the switches learn the path, then trace again.
+PASS  T3 10 traces add no rule on any switch
+        rule counts unchanged on all 6
+PASS  T3 10 traces send nothing to the controller (table-miss counters unchanged)
+        table-miss counters unchanged on all 6
+PASS  T4 pc1 -> srv1 ping works (5/5)
+PASS  T4 the first packets went to the controller (table-miss counters rose on the path)
+        {'arista1': 3, 'cisco1': 5, 'hp1': 3}
+PASS  T4 the controller installed learned rules on every switch of the path
+        {'arista1': 2, 'cisco1': 4, 'hp1': 2}
+PASS  T4 the trace follows those rules: arista1 2>1, cisco1 2>1, r1, cisco1 1>4, hp1 1>2
+        arista1 2>1, cisco1 2>1, r1, cisco1 1>4, hp1 1>2
+PASS  T4 every hop matches the rule OVS itself reports (ovs-ofctl dump-flows)
+PASS  T5 20 more pings all answered (20/20)
+PASS  T5 none of them went to the controller (table-miss +0 on arista1, cisco1, hp1)
+        {'arista1': 0, 'cisco1': 0, 'hp1': 0}
+PASS  T5 the switches forwarded them with the learned rules (40+ packets per switch: requests + replies)
+        {'arista1': 40, 'cisco1': 80, 'hp1': 40}
+PASS  T5 the trace shows the rule being used (arista1 rule packet count went up)
+        4 -> 25 packets
+PASS  T6 same VLAN pc1 -> pc2: arista1 2>1, cisco1 2>3, arista2 1>2 (no router)
+        arista1 2>1, cisco1 2>3, arista2 1>2
+PASS  T6b second round pc1 -> pc2 (20/20 answered: 20) never reaches the controller
+        {'arista1': 0, 'cisco1': 0, 'arista2': 0}
+PASS  T7 vm1 -> vm2 across both OVS servers: ovs1 2>1, arista1 3>1, cisco1 2>3, arista2 1>3, ovs2 1>2
+        ovs1 2>1, arista1 3>1, cisco1 2>3, arista2 1>3, ovs2 1>2
+PASS  T8 pc1 -> inet ends at the router, out to the Internet
+        trace pc1 -> 203.0.113.2 | arista1 (dpid 11)  in 2 -> out 1 | cisco1 (dpid 1)    in 2 -> out 1 | r1 (router)        to the Internet (NAT 203.0.113.1) | -> leaves the OpenFlow network toward 203.0.113.2
+PASS  T9 cable cut: pc2 -> srv1 goes over the standby link: arista2 2>4, arista1 4>1, cisco1 2>1, r1, cisco1 1>4, hp1 1>2
+        arista2 2>4, arista1 4>1, cisco1 2>1, r1, cisco1 1>4, hp1 1>2   (last ping round: 3/3 answered)
+PASS  T9 cable restored: back to arista2 out 1
+        arista2 2>1, cisco1 3>1, r1, cisco1 1>4, hp1 1>2
+PASS  T10 CLI on the controller prints the path and exits 0
+        trace pc1 -> srv1
+        arista1 (dpid 11)  in 2 -> out 1
+        cisco1 (dpid 1)    in 2 -> out 1
+        r1 (router)        VLAN 10 -> 20, to srv1
+        cisco1 (dpid 1)    in 1 -> out 4
+        hp1 (dpid 21)      in 1 -> out 2
+        -> srv1 reached
+        exit=0
+
+22/22 checks passed

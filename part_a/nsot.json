@@ -29,8 +29,17 @@
   },
 
   "protected_flows": {
-    "dns_intercept":  {"priority": 50, "cookie": 48, "match": {"eth_type": 2048, "ip_proto": 17, "udp_dst": 53}},
-    "dhcp_intercept": {"priority": 50, "cookie": 64, "match": {"eth_type": 2048, "ip_proto": 17, "udp_src": 68, "udp_dst": 67}},
+    "_about": "Traffic the AI layer must never disrupt (Integration Rules). part_b/nsot_validator.py builds real example packets from these entries for every host and refuses any AI rule that would match one of them without a higher-priority protected rule catching it first.",
+    "dns_intercept":  {"priority": 50, "cookie": 48, "match": {"eth_type": 2048, "ip_proto": 17, "udp_dst": 53},
+                       "direction": "host -> DNS server (gateway): caught at priority 50, beats every AI rule"},
+    "dns_reply":      {"match": {"eth_type": 2048, "ip_proto": 17, "udp_src": 53},
+                       "direction": "DNS server (gateway) -> host: forwarded by learned rules (priority 1), so an AI drop rule could catch it"},
+    "dhcp_intercept": {"priority": 50, "cookie": 64, "match": {"eth_type": 2048, "ip_proto": 17, "udp_src": 68, "udp_dst": 67},
+                       "direction": "host -> DHCP server (router): caught at priority 50"},
+    "dhcp_reply":     {"match": {"eth_type": 2048, "ip_proto": 17, "udp_src": 67, "udp_dst": 68},
+                       "direction": "router -> host (offer/ack): forwarded by learned rules"},
+    "management":     {"subnet_from": "management.subnet", "tcp_ports": [6633, 8080, 22],
+                       "direction": "out-of-band: OpenFlow (6633), REST (8080) and SSH (22) to/from the management subnet; no data-plane rule may touch these addresses or ports"},
     "table_miss":     {"priority": 0,  "cookie": 0,  "match": {}}
   },
 
@@ -40,8 +49,25 @@
     "16":  "learned",
     "48":  "dns_intercept",
     "64":  "dhcp_intercept",
+    "80":  "tcp_sensor",
+    "81":  "tcp_sensor_connection",
     "176": "ai_intent",
     "177": "ai_response"
+  },
+
+  "ai_policy": {
+    "_about": "What the AI layer (B2 intents, B3 responses) may install or delete. Enforced in code by part_b/nsot_validator.py, never only in a prompt.",
+    "priority_min": 20,
+    "priority_max": 40,
+    "cookies": {"intent": 176, "response": 177},
+    "may_delete_cookies": [176, 177, 16],
+    "may_delete_note": "its own rules, and learned rules (16, re-learned automatically after a link failure). Rules with any other cookie listed above are never deleted; a rule with an unknown cookie (unauthorized) may be deleted by B3.",
+    "allowed_match_fields": ["in_port", "eth_src", "eth_dst", "eth_type", "ip_proto", "ipv4_src", "ipv4_dst",
+                             "tcp_src", "tcp_dst", "udp_src", "udp_dst"],
+    "allowed_actions": ["drop", "meter"],
+    "response_hard_timeout": 120,
+    "intent_hard_timeout_max": 3600,
+    "enforce_at": "the edge switch of the source host (the port it plugs into)"
   },
 
   "vlans": {

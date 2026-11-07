@@ -1291,3 +1291,145 @@ Two problems found on the way, both in `docs/B5_FAILURE_LOG.md` (#1 schema not
 shown to the model, #2 missing session header).
 
 Cost so far: 5 HTTP calls, $0.00026.
+
+---
+
+## Step 12: Part B foundations: sensor, event feed, NSOT validator, B1-B3 code
+
+### What was added on the controller (Python 3.5, deployed, Ryu restarted)
+
+- `applications/tcp_sensor.py`: OVS 2.0 cannot match TCP flags, and our
+  learned rules match MACs only, so a port scan is invisible in flow counters.
+  A catch rule on every access port (priority 10, cookie 0x50) sends the first
+  packet of each new TCP connection to the controller; a per-connection rule
+  (priority 11, cookie 0x51, idle 10 s) keeps the rest in the switch. Replies
+  are recognised by the reverse tuple, so a server answering a scan is not
+  counted as scanning. `GET /lab9/sensor`. Priority 10 is below the AI band
+  (20-40), so a blocked host cannot slip around a block through the sensor.
+  Live check: pc1 web = 1 connection; vm1 scan = 200 ports; 203 replies not
+  counted.
+- `applications/ai_events.py`: `POST/GET /lab9/ai/events`, the display feed
+  for the console's "AI layer" tab (last 1000 events, never changes the
+  network).
+- NSOT: `flow_cookies` (who owns each rule), `protected_flows` (DNS and DHCP
+  in both directions, management subnet + TCP 6633/8080/22), `ai_policy`
+  (priority 20-40, cookies 0xB0/0xB1, what may be deleted, allowed fields and
+  actions, hard timeouts).
+- Regression after the sensor: REST 22/22, dataflow 20/20, trace 22/22,
+  console 38/38, collector 16/16 (`logs/stepB3_sensor/`).
+
+### On the laptop (`part_b/`)
+
+- `nsot_view.py`: one way to read the NSOT (who plugs in where, MAC/IP to
+  name, standby links, a text description of the network for prompts:
+  prompts contain `{network}`, never a hard-coded name).
+- `nsot_validator.py`: every AI install/delete passes here. Install: switch
+  in the NSOT and connected; AI cookie and priority band; allowed match
+  fields; real ports; NSOT hosts only; no management subnet/ports; no
+  match-everything; no DNS/DHCP UDP ports; meters only where the switch has
+  them; hard timeout required; a **protected-packet simulation** (DNS and DHCP
+  both ways for every host, plus management, with the ports the packet can
+  arrive on; refused unless a higher-priority protected rule catches it
+  first); no duplicate/conflicting AI rule. Delete: never a protected cookie.
+  `tests/test_nsot_validator.py` 32/32 (each refusal checked for the RIGHT
+  reason).
+- `events.py`: every step of B1-B3 goes to `logs/ai_events.jsonl` and the
+  console feed; `llm_client.EVENT_HOOK` reports each model call.
+- `b1_analyst.py`, `b2_intent.py`, `b3_responder.py` (+ `b3_policy.json`,
+  `prompts/`): see `docs/PART_B_DESIGN.md` once written; each file starts
+  with a numbered description of its steps.
+- B3 offline tests on real snapshots, `tests/test_b3_logic.py` 25/25. They
+  found a real problem before any live run: a `ping -f` flood is symmetric
+  (the victim replies at the same rate), and flow counters cannot tell the
+  sender from the responder; the first detector named **srv1, the victim**.
+  Now a symmetric pair becomes one incident `pc2+srv1` and code allows alert
+  only (B5 failure log #4). Demo floods use one-way UDP.
+- Meters: every switch reports `max_meter 0`, so a "rate limit" cannot be
+  enforced. B2 refuses it (validator); B3 falls back to a temporary block of
+  the source at its edge port (120 s). Documented, not hidden.
+
+## Step 13: B1 prompt experiment, and the reasoning-token finding
+
+`part_b/b1_experiment.py` captures four snapshots once (two clean, two with
+four planted issues the model is not told about: I1 standby link
+arista1:4-arista2:4 down, I2 rogue drop rule cookie 0x99 on hp1, I3 ping flood
+pc2 -> srv1, I4 port scan vm1 -> srv1 over 300 ports), then gives the SAME
+snapshots to every prompt and scores found / downplayed / missed / false alarm.
+
+Prompts (`part_b/prompts/`): `b1_v1_plain` (just "report anything abnormal"),
+`b1_v2_context` (+ how the network is built, from the NSOT), `b1_v3_checklist`
+(+ a six-item checklist and rules for evidence and severity).
+
+**Run 1** (max_tokens 6000, model's default reasoning): 6 of 12 answers
+invalid. The cost log showed why: answers with `completion_tokens = 6000`,
+all of it reasoning, empty content. The model spent the whole budget thinking.
+v3_checklist still found 4/4 with 0 false alarms, and was the only prompt with
+no false alarm on the clean network. (`logs/stepB1_analyst/run1_6000tokens/`)
+
+Probe on one question: default reasoning 1817 tokens, `reasoning_effort=low`
+467, `thinking: disabled` 0, same answer. So `llm_client` got
+`LAB9_LLM_REASONING` (off/low/medium/high/default), logs `finish_reason`, and
+a cut-off answer now says "max_tokens reached (N spent reasoning)" instead of
+"not valid JSON" (B5 failure log #3).
+
+**Run 2** (max_tokens 12000, reasoning off vs low, fresh snapshots):
+
+| prompt / reasoning | found (of 8) | downplayed | false alarms | invalid | cost | avg s |
+|---|---|---|---|---|---|---|
+| v1_plain / off | 6 | 2 | 0 | 0 | $0.0041 | 28.6 |
+| v1_plain / low | 7 | 1 | 0 | 0 | $0.0122 | 52.7 |
+| v2_context / off | 8 | 0 | 0 | 0 | $0.0042 | 29.7 |
+| v2_context / low | 8 | 0 | 0 | 0 | $0.0094 | 72.0 |
+| **v3_checklist / off** | **8** | 0 | 0 | 0 | $0.0049 | **12.9** |
+| v3_checklist / low | 8 | 0 | 0 | 0 | $0.0081 | 30.5 |
+
+**Decision: `v3_checklist` with reasoning off** (`BEST_PROMPT` in
+`b1_analyst.py`, `LAB9_LLM_REASONING=off` in `.env`). v2 and v3 tie on
+accuracy; the script's cost tie-break picks v2 by $0.0007, but v3 is 2.3x
+faster and was the only prompt that stayed valid and quiet in run 1 as well.
+Reasoning "low" bought nothing here (same findings) at about twice the cost
+and time. What plain prompting missed: v1 rates the planted rogue drop rule or
+the standby-link loss as "info" (downplayed): without the network's design it
+cannot know a standby link matters or that drop rules never exist when the
+network is healthy.
+
+## Step 14: operator approval in the console (Approve / Reject)
+
+### Goal
+
+B2 (always) and B3 in HITL mode must ask a human before changing the network.
+Until now that was a y/N prompt in the terminal only. Now the operator can
+also answer from the console's **AI layer** tab.
+
+### Design
+
+- Controller: `applications/ai_approvals.py` stores only the question and the
+  answer: `POST /lab9/ai/approvals` (what will change, the interpretation,
+  the validator's checks, timeout), `GET /lab9/ai/approvals[?id=N]`,
+  `POST /lab9/ai/approvals/decide` (`{id, approve, by}`; 409 if already
+  decided). Pending past the deadline = `expired` = no.
+- The plan never leaves the laptop: "approved" only lets the AI layer apply
+  the exact plan it showed, already validated. Nobody can inject a different
+  rule through this API (it is unauthenticated, like all of Ryu's REST on
+  8080; see `B5_PRODUCTION_READINESS.md`).
+- Laptop: `part_b/approvals.py` `ask_operator()` posts the request and, if it
+  runs in a terminal, also asks y/N there. **First answer wins** (a terminal
+  answer is sent to the controller too, so the console shows who decided).
+  No answer in time = no; controller unreachable and no terminal = no.
+  B2 waits 120 s (`--timeout`), B3 HITL 60 s (`b3_policy.json`).
+- Console: a "Waiting for your approval" card at the top of the AI layer tab
+  (what will change, what was checked, countdown, Approve / Reject), a badge
+  on the tab (polled on every tab), and "Recent decisions" with who decided.
+  The diagram gets an "Asking the operator" step and "Human: yes (console)".
+
+### Tests (`part_b/tests/test_approvals_ui.py`, 15/15; run 1 14/15)
+
+Real B2 requests, real model, a headless browser clicking the buttons, checked
+on the wire: approve a block (ping pc1 -> srv1 fails, web still works);
+reject an "allow" (block stays); nobody answers for 12 s (no, block stays,
+console says "nobody answered in time"); approve the "allow" (ping works
+again); a second answer gets 409; badge appears from another tab and goes
+away; no JavaScript errors. Run 1 failed one check: the console's `cap()`
+helper only lowercases, so "approved" was not capitalised; fixed.
+Regression: REST 22/22, console UI 38/38, B3 logic 25/25, validator 32/32,
+LLM client offline 19/19 (`logs/stepB2_approvals/`).

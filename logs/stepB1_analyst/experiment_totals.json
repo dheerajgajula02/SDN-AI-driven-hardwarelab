@@ -1,0 +1,119 @@
+{
+ "totals": {
+  "v1_plain/off": {
+   "found": 6,
+   "missed": 0,
+   "downplayed": 2,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 4,
+   "cost": 0.004083,
+   "avg_seconds": 28.6
+  },
+  "v1_plain/low": {
+   "found": 7,
+   "missed": 0,
+   "downplayed": 1,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 4,
+   "cost": 0.012164,
+   "avg_seconds": 52.7
+  },
+  "v2_context/off": {
+   "found": 8,
+   "missed": 0,
+   "downplayed": 0,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 4,
+   "cost": 0.004194,
+   "avg_seconds": 29.7
+  },
+  "v2_context/low": {
+   "found": 8,
+   "missed": 0,
+   "downplayed": 0,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 5,
+   "cost": 0.009408,
+   "avg_seconds": 72.0
+  },
+  "v3_checklist/off": {
+   "found": 8,
+   "missed": 0,
+   "downplayed": 0,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 4,
+   "cost": 0.004906,
+   "avg_seconds": 12.9
+  },
+  "v3_checklist/low": {
+   "found": 8,
+   "missed": 0,
+   "downplayed": 0,
+   "false_alarms": 0,
+   "invalid": 0,
+   "calls": 4,
+   "cost": 0.008078,
+   "avg_seconds": 30.5
+  }
+ },
+ "best": "v2_context/off",
+ "truth": [
+  {
+   "id": "I1",
+   "name": "redundant (standby) link arista1:4-arista2:4 down",
+   "categories": [
+    "link_failure"
+   ],
+   "devices": [
+    "arista1",
+    "arista2"
+   ]
+  },
+  {
+   "id": "I2",
+   "name": "rogue drop rule (cookie 0x99) on hp1: pc1 -> srv1",
+   "categories": [
+    "unauthorized_flow",
+    "drop_rule"
+   ],
+   "devices": [
+    "hp1"
+   ]
+  },
+  {
+   "id": "I3",
+   "name": "ping flood from pc2 to srv1",
+   "categories": [
+    "traffic_flood"
+   ],
+   "devices": [
+    "pc2",
+    "arista2",
+    "cisco1",
+    "hp1",
+    "srv1",
+    "r1"
+   ]
+  },
+  {
+   "id": "I4",
+   "name": "port scan from vm1 to srv1 (300 ports)",
+   "categories": [
+    "port_scan"
+   ],
+   "devices": [
+    "vm1",
+    "ovs1",
+    "arista1",
+    "cisco1",
+    "hp1",
+    "srv1"
+   ]
+  }
+ ]
+}

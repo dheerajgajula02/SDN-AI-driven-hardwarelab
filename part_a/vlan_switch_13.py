@@ -29,7 +29,7 @@ from ryu.controller.handler import (CONFIG_DISPATCHER, DEAD_DISPATCHER,
 from ryu.lib.packet import ether_types, ethernet, packet, udp, vlan
 from ryu.ofproto import ofproto_v1_3
 
-from applications import console, dhcp_unicast, dns_blacklist, sdn_trace
+from applications import ai_approvals, ai_events, console, dhcp_unicast, dns_blacklist, sdn_trace, tcp_sensor
 
 
 # nsot.json sits next to this file. Setting LAB9_NSOT points the app at another
@@ -230,6 +230,13 @@ class VlanSwitch13(app_manager.RyuApp):
         self.dns_engine = dns_blacklist.DnsBlacklistEngine(self.nsot, self.logger)
         # Objective 4 (A4): DHCP Unicast engine + Objective 6 REST / Web UI
         self.dhcp_engine = dhcp_unicast.DhcpUnicastEngine(self.nsot, LINKS, self.logger)
+        # Part B (B3): TCP connection sensor (first packet of every TCP
+        # connection from a host), read by the AI layer through REST.
+        self.tcp_sensor = tcp_sensor.TcpSensor(self.nsot, self.logger)
+        # Part B: feed of the AI layer's steps, for the console's AI tab.
+        self.ai_events = ai_events.AiEventStore()
+        # Part B: operator approvals (Approve / Reject in the console).
+        self.ai_approvals = ai_approvals.ApprovalStore()
         wsgi = kwargs.get('wsgi')
         if wsgi is not None:
             wsgi.register(dns_blacklist.DnsRestController,
@@ -243,6 +250,11 @@ class VlanSwitch13(app_manager.RyuApp):
             rest = 'http://127.0.0.1:%d' % self.nsot['controller']['rest_port']
             self.trace_engine = sdn_trace.TraceEngine(self.nsot, sdn_trace.rest_flow_reader(rest))
             wsgi.register(sdn_trace.TraceRestController, {'trace_engine': self.trace_engine})
+            # Part B: GET /lab9/sensor, GET/POST /lab9/ai/events
+            wsgi.register(tcp_sensor.TcpSensorRestController, {'tcp_sensor': self.tcp_sensor})
+            wsgi.register(ai_events.AiEventsRestController, {'ai_events': self.ai_events})
+            # Part B: GET/POST /lab9/ai/approvals, POST /lab9/ai/approvals/decide
+            wsgi.register(ai_approvals.AiApprovalsRestController, {'ai_approvals': self.ai_approvals})
 
         # The controller's memory of where each host is.
         # Kept per switch, then per VLAN, so VLANs never mix:
@@ -299,7 +311,12 @@ class VlanSwitch13(app_manager.RyuApp):
         # are rewritten to unicast and sent directly to the router.
         dhcp_unicast.install_dhcp_intercept_flow(dp)
 
-        self.logger.info('switch %s connected, table-miss + DNS + DHCP rules installed', dp.id)
+        # Part B (B3): the TCP sensor's catch rule on every host (access) port:
+        # priority 10, cookie 0x50, new TCP connections -> controller.
+        access = [p for p, (role, _) in PORTS.get(dp.id, {}).items() if role == 'access']
+        tcp_sensor.install_tcp_sensor_flows(dp, access)
+
+        self.logger.info('switch %s connected, table-miss + DNS + DHCP + TCP sensor rules installed', dp.id)
 
         # Remember the connection, and ask which of its ports are up or down
         # (a cable may already be unplugged when the switch connects).
@@ -499,6 +516,12 @@ class VlanSwitch13(app_manager.RyuApp):
                                           PORTS, self.blocked, self.down):
             return
 
+        # ---- Step 2d (Part B): TCP sensor ------------------------------------
+        # Notes new TCP connections from hosts (scan detection). Returns the
+        # IP/TCP headers when this is a sensor packet, so Step 4 can install a
+        # per-connection rule. It never stops the packet.
+        conn = self.tcp_sensor.observe(dpid, in_port, role, pkt)
+
         udp_hdr = pkt.get_protocol(udp.udp)
         is_dns = bool(udp_hdr and udp_hdr.dst_port == 53)
 
@@ -547,6 +570,15 @@ class VlanSwitch13(app_manager.RyuApp):
             self.add_flow(dp, 1, match, actions, idle_timeout=60, cookie=LEARNED)
             self.logger.info('flow: dpid=%s vlan=%s in_port=%s src=%s dst=%s -> port %s',
                              dpid, vid, in_port, eth.src, eth.dst, out_port)
+            # Part B sensor: the TCP catch rule (priority 10) beats the rule
+            # above, so this TCP connection gets its own rule (priority 11,
+            # idle 10 s) and its later packets stay in the switch.
+            if conn:
+                ip_hdr, seg = conn
+                self.add_flow(dp, tcp_sensor.CONNECTION_PRIORITY,
+                              tcp_sensor.connection_match(parser, in_port, eth, ip_hdr, seg, match_vid),
+                              actions, idle_timeout=tcp_sensor.CONNECTION_IDLE,
+                              cookie=tcp_sensor.CONNECTION_COOKIE)
 
         # ---- Step 5: send this packet now ------------------------------------
         # The rule only covers future packets; this one is still waiting at
@@ -632,4 +664,11 @@ class VlanSwitch13(app_manager.RyuApp):
                 datapath=dp, command=ofp.OFPFC_DELETE, table_id=ofp.OFPTT_ALL,
                 out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY,
                 cookie=LEARNED, cookie_mask=0xffffffffffffffff,
+                match=parser.OFPMatch()))
+            # Part B sensor: per-connection rules point along the old path
+            # too (cookie 0x51; the catch rules, cookie 0x50, stay).
+            dp.send_msg(parser.OFPFlowMod(
+                datapath=dp, command=ofp.OFPFC_DELETE, table_id=ofp.OFPTT_ALL,
+                out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY,
+                cookie=tcp_sensor.CONNECTION_COOKIE, cookie_mask=0xffffffffffffffff,
                 match=parser.OFPMatch()))

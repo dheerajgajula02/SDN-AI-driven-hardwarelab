@@ -1,0 +1,254 @@
+[
+ {
+  "scenario": "clean_1",
+  "variant": "v1_plain",
+  "calls": 2,
+  "repaired": true,
+  "evidence_chars": 7536,
+  "report": {
+   "network_health": "degraded",
+   "findings": [
+    {
+     "category": "unauthorized_flow",
+     "severity": "warning",
+     "device": "arista2",
+     "port": null,
+     "evidence": "tcp_sensor_last_60s reports a new TCP connection from 10.10.10.118 to srv1 (10.10.20.21) port 80 (1 new connection, 1 distinct dst host, 1 distinct dst port). 10.10.10.118 is not in the hosts inventory (pc1=10.10.10.11, pc2=10.10.10.12). tcp_sensor_connection rules are installed on arista2 and hp1, so this flow traversed arista2 toward the server side. All switches connected, all links up, zero port errors/drops.",
+     "explanation": "An endpoint in the 10.10.10.0/24 client subnet that is not an inventoried host opened a connection to srv1 on HTTP port 80. With only one destination host and one destination port it is not port-scan-like; it is more likely an unauthorized/rogue device, an unmanaged VM, or a spoofed source address. The exact access port is not visible in the collected state, but the tcp_sensor_connection rule on arista2 shows the flow was observed there.",
+     "recommended_action": "Resolve 10.10.10.118 on arista1/arista2 (ARP table, MAC address-table) and check DHCP snooping/leases to find its access port. Confirm whether the device is authorized. If unauthorized, apply a drop rule or quarantine the port and review srv1's HTTP logs for the request. If legitimate, add the host to inventory and document the expected flow."
+    }
+   ],
+   "summary": "Infrastructure appears healthy: all six switches are connected, every link is up (arista1:4-arista2:4 is a standby redundant link), and all ports show zero errors/drops with symmetric rates. The one abnormality is a new TCP session from non-inventoried host 10.10.10.118 to srv1:80, indicating a possible unauthorized endpoint that should be traced to its access port."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [
+    "warning unauthorized_flow on arista2: tcp_sensor_last_60s reports a new TCP connection from 10.10.10.118 to srv1 (10.10.20.21) port 80 (1 new connection, 1 di"
+   ],
+   "per_issue": {}
+  }
+ },
+ {
+  "scenario": "clean_1",
+  "variant": "v2_context",
+  "error": "answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "scenario": "clean_1",
+  "variant": "v3_checklist",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7536,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checklist items pass: all switches connected, all links up including idle standby arista1:4-arista2:4, no unauthorized or drop rules, no traffic above 100 pps, no port scan thresholds exceeded, and no port errors/drops or invalid samples."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  }
+ },
+ {
+  "scenario": "clean_2",
+  "variant": "v1_plain",
+  "calls": 2,
+  "repaired": true,
+  "evidence_chars": 7536,
+  "report": {
+   "network_health": "degraded",
+   "findings": [
+    {
+     "category": "unauthorized_flow",
+     "severity": "warning",
+     "device": "hp1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s reports 10.10.10.118, which is absent from the host inventory, making 2 new TCP connections to srv1 on port 80 (distinct_dst_hosts=1, distinct_dst_ports=1). hp1 port 2 connects srv1.",
+     "explanation": "An unmanaged endpoint in the 10.10.10.0/24 user subnet is reaching srv1 over HTTP. Since 10.10.10.118 is not defined as a known host, this is likely a rogue device, an unmanaged workload, or a missing authorization/policy entry. The single destination host and single destination port do not indicate a port scan.",
+     "recommended_action": "Identify 10.10.10.118 by MAC/ARP and its switch attachment, validate it against DHCP and authorized inventory, and quarantine or ACL-block it if unauthorized. Review srv1 HTTP logs and confirm whether this source should be permitted."
+    }
+   ],
+   "summary": "All six switches are connected, all monitored links are up, and port counters show no errors or drops. Learned flows appear consistent with expected reachability and the standby inter-switch link is idle as designed. The anomaly is an unknown host, 10.10.10.118, opening TCP connections to srv1:80, which should be verified against authorization policy."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [
+    "warning unauthorized_flow on hp1: tcp_sensor_last_60s reports 10.10.10.118, which is absent from the host inventory, making 2 new TCP connections to srv1 "
+   ],
+   "per_issue": {}
+  }
+ },
+ {
+  "scenario": "clean_2",
+  "variant": "v2_context",
+  "error": "answer still invalid after a repair try: findings[0]: device \"unknown\" is not in the NSOT (switches: arista1, arista2, cisco1, hp1, ovs1, ovs2)"
+ },
+ {
+  "scenario": "clean_2",
+  "variant": "v3_checklist",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7536,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checks passed: all six switches are connected with no missing or unknown DPIDs; all links are up, and the standby link arista1:4-arista2:4 is up and idle; no unauthorized or drop rules are present; no port or learned rule exceeds 100 packets per second; tcp_sensor shows no source exceeding 20 distinct destination ports or 5 hosts; and no ports report dropped packets, errors, or invalid samples."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  }
+ },
+ {
+  "scenario": "planted_1",
+  "variant": "v1_plain",
+  "error": "answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "scenario": "planted_1",
+  "variant": "v2_context",
+  "error": "answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)"
+ },
+ {
+  "scenario": "planted_1",
+  "variant": "v3_checklist",
+  "calls": 2,
+  "repaired": true,
+  "evidence_chars": 8760,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "link arista1:4-arista2:4 standby=true state=down why='arista1 port 4 down, arista2 port 4 down'; learned_rules_using_it=0; arista1 port4 rx_pps=0.0 tx_pps=0.0, arista2 port4 rx_pps=0.0 tx_pps=0.0",
+     "explanation": "Standby redundant link arista1:4-arista2:4 is down, so redundancy is lost. Main links remain up and the network still works, but there is no standby path.",
+     "recommended_action": "Restore arista1 port 4 and arista2 port 4 to bring the standby link back up."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 other_rules: cookie=153 owner=unauthorized drop=true priority=30 packets=43 pps=3.2 rule='IP pc1 -> srv1 {\"dl_type\": 2048} => DROP'",
+     "explanation": "An unauthorized drop rule on hp1 blocks traffic between pc1 (10.10.10.11) and srv1 (10.10.20.21). This is a drop rule and is actively discarding packets.",
+     "recommended_action": "Remove the unauthorized drop rule from hp1 and investigate how it was installed."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port2 rx_pps=83390.7 tx_pps=83390.7; arista2 port1 rx_pps=83393.1 tx_pps=83392.9; busiest learned rule 'in 2: pc2 -> r1' 96546.9 pps; cisco1 port1 rx_pps=167287.1 tx_pps=167287.1",
+     "explanation": "Traffic is far above normal (>100 pps), and the busiest learned rule is sourced from pc2 toward r1 at 96546.9 pps. The flood also appears on cisco1 port 1 at 167287.1 pps.",
+     "recommended_action": "Identify and contain pc2, then investigate the cause of the flood and clear any resulting congestion."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s vm1: new_connections=300 distinct_dst_ports=300 distinct_dst_hosts=1 dst_hosts=['srv1'] example_ports=[1,2,3,4,5,6,7,8,9,10]",
+     "explanation": "vm1 (10.10.20.31) on ovs1 port 2 has 300 distinct destination ports on srv1 in the last 60 seconds, exceeding the >20 distinct ports scan threshold. This is an active port scan.",
+     "recommended_action": "Quarantine vm1 and investigate the scanning activity against srv1."
+    }
+   ],
+   "summary": "Critical issues found: an unauthorized drop rule on hp1 blocks pc1 to srv1 traffic; a traffic flood from pc2 affects arista2, cisco1, and other paths; vm1 is scanning srv1 across 300 ports. The standby link arista1:4-arista2:4 is down, so redundancy is lost but main links are up. All switches are connected, no unknown DPIDs, and no port errors or drops were sampled."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  }
+ },
+ {
+  "scenario": "planted_2",
+  "variant": "v1_plain",
+  "calls": 2,
+  "repaired": true,
+  "evidence_chars": 8768,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "cisco1",
+     "port": 1,
+     "evidence": "Sustained ~83k-166k pps on the r1 side: cisco1:1 rx/tx 165817/165817 pps, cisco1:3 82908/82909 pps, cisco1:4 82907/82910 pps; arista2:1 and :2 ~83145 pps; hp1:1 and :2 ~82800 pps. Baseline on arista1/ovs1/ovs2 is only 2-5 pps.",
+     "explanation": "A large bidirectional traffic storm is saturating the links between cisco1, arista2 and hp1 toward router r1 on VLANs 10/20 (pc2<->r1 and srv1<->r1 flows each ~100k pps). This is orders of magnitude above the 3-second baseline seen elsewhere and is consistent with a broadcast/unknown-unicast storm or a forwarding loop on the r1 segment; the low-rate standby link arista1:4-arista2:4 being down should not cause this. Left unchecked it will drop legitimate traffic and exhaust switch/CPU resources.",
+     "recommended_action": "Trace the source of the ~100k pps on r1/pc2/srv1 (span or NetFlow), verify no L2 loop exists between cisco1, arista2 and hp1, enable storm-control/broadcast suppression on cisco1:1,3,4 and hp1:1,2, and check pc2/r1 for a misbehaving NIC or looped cable."
+    },
+    {
+     "category": "port_scan",
+     "severity": "warning",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 opened 300 new TCP connections to srv1 across 300 distinct destination ports (ports 1-10 shown, up to 300) in 60 s, while the only other host (10.10.10.118) made 1 connection to srv1:80.",
+     "explanation": "vm1 (10.10.20.31) is performing a horizontal/vertical TCP SYN scan against srv1, hitting 300 different ports in under a minute. This is classic reconnaissance/scanning behavior and may precede exploitation or be part of an ongoing attack.",
+     "recommended_action": "Investigate vm1 for compromise/malware, isolate vm1 (ovs1 port 2) if unauthorized, and add a rate-limit or ACL to block port scanning from the VM segment to srv1 while confirming whether vm1 is a sanctioned host."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "warning",
+     "device": "hp1",
+     "port": 1,
+     "evidence": "hp1 other_rules: cookie 153, priority 30, owner \"unauthorized\", drop=true, 'IP pc1 -> srv1 {dl_type 2048} => DROP', packets=50, pps=3.9. This rule blocks all IPv4 traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21).",
+     "explanation": "An unauthorized-owner DROP rule has been installed on hp1 that silently blackholes pc1->srv1 traffic (already 50 packets / ~3.9 pps dropped). If this is not an intended security policy it breaks legitimate pc1-to-srv1 connectivity and indicates an injected/misconfigured flow that should be reviewed.",
+     "recommended_action": "Confirm with the security/change owner whether pc1->srv1 must be blocked. If not authorized, delete cookie 153 on hp1 and verify pc1->srv1 connectivity; investigate how the unauthorized rule was installed (controller vs. direct switch access)."
+    },
+    {
+     "category": "link_failure",
+     "severity": "info",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Link arista1:4-arista2:4 state=down, why='arista1 port 4 down, arista2 port 4 down', standby=true, learned_rules_using_it=0. All other links are up.",
+     "explanation": "The redundant inter-switch link between arista1 and arista2 is down. Because it is flagged standby with no learned flows using it, this is expected redundancy and currently causes no forwarding impact, but it should be repaired to preserve failover capacity.",
+     "recommended_action": "Verify the link is administratively disabled for redundancy reasons; if not intentional, check cabling/SFP on arista1 port 4 and arista2 port 4 and restore the link."
+    }
+   ],
+   "summary": "The network is in a critical state driven by a massive traffic storm (~83k-166k pps) saturating the r1-facing links between cisco1, arista2 and hp1 on VLANs 10/20, versus a 2-5 pps baseline elsewhere. In parallel, vm1 on ovs1 is conducting a 300-port TCP scan against srv1, and an unauthorized-owner DROP rule on hp1 (cookie 153) is blackholing pc1->srv1 traffic. The standby link arista1:4-arista2:4 is down but is redundant and non-impacting. Prioritize containing the flood and the scanning VM, then review the injected drop rule."
+  },
+  "score": {
+   "found": 3,
+   "downplayed": 1,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "downplayed",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  }
+ },
+ {
+  "scenario": "planted_2",
+  "variant": "v2_context",
+  "error": "answer still invalid after a repair try: answer.summary: longer than 700 characters"
+ },
+ {
+  "scenario": "planted_2",
+  "variant": "v3_checklist",
+  "error": "answer still invalid after a repair try: not valid JSON: Unterminated string starting at: line 19 column 22 (char 1048)"
+ }
+]

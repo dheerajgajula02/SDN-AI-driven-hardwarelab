@@ -1,0 +1,66 @@
+PASS  V1 block pc1 -> srv1 at pc1's port on arista1 (vendor switch): accepted
+        ['switch arista1 is in the NSOT', 'priority 30 is inside the AI band 20-40 (below the protected rules at 50)', 'match fields, ports and addresses all exist in the NSOT; no management address', 'simulated 36 protected packets (DNS, DHCP, management): none disrupted']
+PASS  V2 block only web (TCP 80) pc1 -> srv1: accepted
+        []
+PASS  V3 quarantine vm1 on ovs1 (OVS), all its traffic: accepted (DNS/DHCP requests still caught at 50)
+        simulated 36 protected packets (DNS, DHCP, management): none disrupted
+PASS  V4 drop everything TO pc1 (eth_dst=pc1) -> refused (would disrupt protected traffic: DNS reply r1 -> pc1)
+        ['would disrupt protected traffic: DNS reply r1 -> pc1; DHCP reply r1 -> pc1']
+PASS  V5 drop everything to srv1 on hp1 -> refused (DHCP reply r1 -> srv1)
+        ['would disrupt protected traffic: DNS reply r1 -> srv1; DHCP reply r1 -> srv1']
+PASS  V6 "block DNS for pc1" (udp 53) -> refused (targets a protected flow)
+        ['udp_dst 53 targets a protected flow (DNS/DHCP ports [53, 67, 68])']
+PASS  V7 the management network -> refused (management network)
+        ['ipv4_dst 10.224.76.126 is in the management network 10.224.0.0/16 (protected)']
+PASS  V8 a management port (tcp 6633) -> refused (management port)
+        ['tcp_dst 6633 is a management port (protected)']
+PASS  V9 priority 60 (above the protected rules) -> refused (outside the AI band)
+        ['priority 60 is outside the AI band 20-40']
+PASS  V10 never expires (hard_timeout 0) -> refused (hard_timeout)
+        ['hard_timeout must be 1-3600 s so the rule removes itself (got 0)']
+PASS  V11 response longer than 120 s -> refused (hard_timeout)
+        ['hard_timeout must be 1-120 s so the rule removes itself (got 600)']
+PASS  V12 meter on arista1 (no meter support) -> refused (does not support meters)
+        ['arista1 does not support meters (/stats/meterfeatures reports max_meter 0)']
+PASS  V13 action "output" (rerouting) -> refused (not allowed)
+        ["action 'output' not allowed (allowed: drop, meter)"]
+PASS  V14 match on VLAN (field not allowed) -> refused (not allowed)
+        ['match fields not allowed for AI rules: vlan_vid']
+PASS  V15 matches everything (only ip_proto) -> refused (names no host)
+        ['the match names no host or port: it would hit every packet on arista1']
+PASS  V16 unknown switch -> refused (not in the NSOT)
+        ['switch "juniper9" is not in the NSOT']
+PASS  V17 port 9 on arista1 -> refused (no port 9)
+        ['arista1 has no port 9 in the NSOT']
+PASS  V18 unknown host 10.10.10.99 -> refused (not a host in the NSOT)
+        ['ipv4_src 10.10.10.99 is inside a VLAN but is not a host in the NSOT']
+PASS  V19 unknown MAC -> refused (not a device in the NSOT)
+        ['eth_src 00:de:ad:be:ef:00 is not a device in the NSOT']
+PASS  V20 switch not connected -> refused (not connected)
+        ['switch arista1 is not connected to the controller']
+PASS  V21 the same block again -> refused (duplicate)
+        ['duplicate: the same rule already exists on arista1 (ai_intent, cookie 176)']
+PASS  V22 drop overlapping an existing rate limit -> refused (conflict)
+        ["conflict: an existing ai_intent rule on arista1 meters overlapping traffic ({'in_port': 2, 'dl_type': 2048, 'nw_src': '10.10.10.11'})"]
+PASS  V23 a block for a different destination is no conflict
+        []
+PASS  V24 delete cookie 0x0 (table_miss): refused
+        cookie 0 (table_miss) is protected: the AI never deletes it
+PASS  V24 delete cookie 0x30 (dns_intercept): refused
+        cookie 48 (dns_intercept) is protected: the AI never deletes it
+PASS  V24 delete cookie 0x40 (dhcp_intercept): refused
+        cookie 64 (dhcp_intercept) is protected: the AI never deletes it
+PASS  V24 delete cookie 0x50 (tcp_sensor): refused
+        cookie 80 (tcp_sensor) is protected: the AI never deletes it
+PASS  V24 delete cookie 0xb0 (ai_intent): allowed
+        cookie 176 (ai_intent) may be deleted by the AI
+PASS  V24 delete cookie 0xb1 (ai_response): allowed
+        cookie 177 (ai_response) may be deleted by the AI
+PASS  V24 delete cookie 0x10 (learned): allowed
+        cookie 16 (learned) may be deleted by the AI
+PASS  V24 delete cookie 0x99 (unauthorized): allowed
+        cookie 153 is not ours: unauthorized rule
+PASS  V25 REST body: dpid 11, cookie 0xB0, priority 30, hard_timeout 600, no actions (= drop)
+        {'dpid': 11, 'table_id': 0, 'cookie': 176, 'priority': 30, 'hard_timeout': 600, 'idle_timeout': 0, 'match': {'in_port': 2, 'eth_type': 2048, 'ipv4_src': '10.10.10.11', 'ipv4_dst': '10.10.20.21'}, 'actions': []}
+
+32/32 checks passed

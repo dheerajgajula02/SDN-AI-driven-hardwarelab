@@ -249,6 +249,40 @@ ol.rules { margin: 0.75rem 0 0; padding-left: 1.4rem; font-size: 0.9375rem; }
 ol.rules li { margin-bottom: 0.6rem; }
 ol.rules li span { display: block; color: var(--dim); font-size: var(--s-small); overflow-wrap: anywhere; }
 ol.rules li.stop b { color: var(--orange); }
+.ai-select {
+  font: inherit; font-size: var(--s-body); color: var(--text); min-width: 22rem; max-width: 100%;
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 4px; padding: 0.42rem 0.55rem;
+}
+/* operator approvals (AI layer tab) */
+.tab .badge {
+  display: inline-block; min-width: 1.35rem; margin-left: 0.4rem; padding: 0 0.35rem; border-radius: 0.7rem;
+  background: var(--orange); color: var(--rack); font-size: 0.75rem; font-weight: 700; text-align: center;
+}
+.approvals { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--groove); }
+.approval { margin-top: 0.9rem; padding: 0.9rem 1rem 1rem; border: 1px solid var(--orange); border-radius: 6px; background: var(--rack); }
+.approval .who { color: var(--orange); font-size: var(--s-small); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.approval h4 { font-size: 1.0625rem; margin-top: 0.2rem; overflow-wrap: anywhere; }
+.side .approval p { color: var(--text); }
+.approval .label { color: var(--dim); font-size: var(--s-small); margin-top: 0.75rem; }
+.approval ul { margin: 0.3rem 0 0; padding-left: 1.2rem; font-size: 0.875rem; color: var(--dim); }
+.approval ul li { margin: 0.15rem 0; overflow-wrap: anywhere; }
+.approval pre.cmd { margin-top: 0.3rem; word-break: normal; overflow-wrap: anywhere; }
+.approval .left { margin-top: 0.75rem; font-size: var(--s-small); color: var(--dim); }
+.approval .row { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.approval .row .btn { flex: 1; }
+.btn.approve { border-color: var(--green); color: var(--green); }
+.btn.approve:hover { background: var(--green); color: var(--rack); }
+.btn.reject { border-color: var(--orange); color: var(--orange); }
+.btn.reject:hover { background: var(--orange); color: var(--rack); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.decided { margin: 0.5rem 0 0; padding-left: 1.2rem; font-size: 0.875rem; color: var(--dim); }
+.decided .yes { color: var(--green); }
+.decided .no { color: var(--orange); }
+.ai-follow { color: var(--dim); font-size: var(--s-small); display: flex; align-items: center; gap: 0.35rem; }
+.topo .n.ai rect { stroke: #4A5361; }
+.topo .n.code rect { stroke-dasharray: 5 3; }
+.topo .zone rect { fill: none; stroke: var(--groove); stroke-dasharray: 4 4; }
+.topo .zone text { fill: var(--dim); font-size: 12px; }
 #trace-head.ok { color: var(--green); }
 #trace-head.stopped { color: var(--orange); }
 #how-trace-out .now { color: var(--blue); }
@@ -331,6 +365,7 @@ dl.pkt .chg { color: var(--blue); font-weight: 600; }
   <button class="tab" role="tab" id="tab-dns"  aria-controls="app-dns"  data-app="dns">DNS filter</button>
   <button class="tab" role="tab" id="tab-dhcp" aria-controls="app-dhcp" data-app="dhcp">DHCP to router</button>
   <button class="tab" role="tab" id="tab-trace" aria-controls="app-trace" data-app="trace">Path trace</button>
+  <button class="tab" role="tab" id="tab-ai"   aria-controls="app-ai"   data-app="ai">AI layer</button>
   <button class="tab" role="tab" id="tab-how"  aria-controls="app-how"  data-app="how">How it works</button>
 </nav>
 
@@ -464,6 +499,66 @@ dl.pkt .chg { color: var(--blue); font-weight: 600; }
   </aside>
 </div>
 
+<!-- ======================= AI layer (Part B: where every call goes) ======================= -->
+<div class="app how" id="app-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
+  <main class="main">
+    <div class="intro">
+      <h2>AI layer, step by step</h2>
+      <p>Every step the AI layer takes, in order: reading the switches through the controller, each
+         call to the model, the code checks on its answer, the NSOT validator, the approval, and the
+         rule sent to a switch. Live runs come from B1, B2 and B3 as they happen; the examples explain
+         each part before anything has run.</p>
+    </div>
+    <div class="scenarios-wrap">
+      <div class="scen-row"><span class="group">Live runs</span>
+        <select id="ai-runs" class="ai-select" aria-label="Live run"></select>
+        <label class="ai-follow"><input type="checkbox" id="ai-follow" checked> follow new activity</label></div>
+      <div class="scen-row"><span class="group">Examples</span><span id="ai-examples"></span></div>
+    </div>
+    <div class="stage">
+      <svg id="ai-svg" class="topo" role="img" aria-label="Diagram of the AI layer with the current step"></svg>
+    </div>
+    <ul class="legend" aria-label="What the colours mean">
+      <li><span class="sw" style="--c: var(--text)"></span>reading or asking</li>
+      <li><span class="sw" style="--c: var(--blue)"></span>a call to the model</li>
+      <li><span class="sw" style="--c: var(--green)"></span>passed a check, or applied</li>
+      <li><span class="sw" style="--c: var(--orange)"></span>detected, rejected or refused</li>
+    </ul>
+  </main>
+
+  <aside class="side">
+    <section class="approvals" id="ai-approvals" aria-live="polite" hidden>
+      <h3>Waiting for your approval</h3>
+      <p>The AI layer will not change the network until you decide. Each plan below already passed the
+         NSOT validator. No answer before the countdown ends counts as Reject.</p>
+      <div id="ai-approval-list"></div>
+    </section>
+    <p class="counts" id="ai-count"></p>
+    <h3 id="ai-title" class="step-title"></h3>
+    <p class="step-text" id="ai-text" aria-live="polite"></p>
+    <div class="controls">
+      <button class="btn" id="ai-back" type="button">Back</button>
+      <button class="btn" id="ai-play" type="button">Play</button>
+      <button class="btn" id="ai-next" type="button">Next</button>
+    </div>
+    <section>
+      <h3>This run</h3>
+      <p id="ai-cost">No model calls yet.</p>
+    </section>
+    <section>
+      <h3>Recent decisions</h3>
+      <p id="ai-decided-none">None yet. B2 always asks; B3 asks in HITL mode.</p>
+      <ol class="decided" id="ai-decided"></ol>
+      <p class="notice" id="aiap-notice" role="status"></p>
+    </section>
+    <section>
+      <h3>All steps</h3>
+      <ol class="steplist" id="ai-steps"></ol>
+    </section>
+    <p class="notice" id="ai-notice" role="status"></p>
+  </aside>
+</div>
+
 <!-- ======================= How it works (hop-by-hop map) ======================= -->
 <div class="app how" id="app-how" role="tabpanel" aria-labelledby="tab-how" hidden>
   <main class="main">
@@ -553,6 +648,7 @@ function notice(app, text, isError) {
 /* ---------------- Tabs ---------------- */
 function showApp(app) {
   if (app !== 'how' && HOW.playing) { HOW.playing = false; HOW.token++; $('how-play').textContent = 'Play'; }
+  if (app !== 'ai' && AI.playing) { AI.playing = false; AI.token++; $('ai-play').textContent = 'Play'; }
   current = app;
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.app === app)));
   document.querySelectorAll('.app').forEach(p => { p.hidden = p.id !== 'app-' + app; });
@@ -1647,10 +1743,442 @@ function renderTrace(d) {
 
 $('trace-form').addEventListener('submit', runTrace);
 
+/* =====================================================================
+   AI layer (Part B): where every call goes
+   =====================================================================
+   The AI layer runs on the laptop and POSTs each step to the controller
+   (/lab9/ai/events). This tab:
+   1. aiDraw()        draws the diagram: operator, AI layer, model, checks,
+                      NSOT validator, controller, and the switches (NSOT)
+   2. aiStep(e)       turns one event into a step: which hops the dot
+                      travels, its colour, and a plain-language text
+   3. aiPoll()        fetches new events every 2 s, groups them into runs
+   4. aiGo/aiPlay     the same Back / Play / Next as "How it works"
+   ===================================================================== */
+const AI = { built: false, pos: {}, events: [], lastId: 0, steps: [], i: 0, playing: false, token: 0,
+             view: null, model: 'model' };
+const APP_NAMES = { b1: 'B1 analyst', b2: 'B2 intent', b3: 'B3 responder' };
+
+function aiDraw() {
+  const t = names.topology;
+  if (!t || !t.switches) return false;
+  const svg = $('ai-svg');
+  svg.innerHTML = '';
+  // Step 1: fixed places for the AI-layer parts, the switches in a row (NSOT).
+  const sws = Object.keys(t.switches).sort();
+  const W = Math.max(1000, sws.length * 150 + 60);
+  const pos = {
+    operator: { x: 110, y: 70 }, ai: { x: 380, y: 70 }, model: { x: 660, y: 70 }, logs: { x: W - 110, y: 70 },
+    detect: { x: 110, y: 200 }, check: { x: 380, y: 200 }, validator: { x: 660, y: 200 }, nsot: { x: W - 110, y: 200 },
+    controller: { x: 380, y: 330 }
+  };
+  sws.forEach((s, k) => { pos[s] = { x: 80 + k * (W - 160) / Math.max(1, sws.length - 1), y: 460 }; });
+  AI.pos = pos;
+  svg.setAttribute('viewBox', `0 0 ${W} 510`);
+  const L = cls => svgEl('g', { class: cls }, svg);
+  const zones = L('zone'), links = L('links'), nodes = L('nodes'), dotLayer = L('dot-layer');
+
+  // Step 2: zones: what runs where.
+  svgEl('rect', { x: 20, y: 20, width: 760, height: 228, rx: 8 }, zones);
+  svgEl('text', { x: 34, y: 40 }, zones).textContent = 'Laptop: Part B AI layer (Python)';
+  svgEl('rect', { x: 20, y: 290, width: W - 40, height: 210, rx: 8 }, zones);
+  svgEl('text', { x: W - 34, y: 310, 'text-anchor': 'end' }, zones).textContent = 'Network: one controller path (REST), OpenFlow switches';
+
+  // Step 3: the paths a step can take.
+  const edge = (a, b) => svgEl('line', { class: 'l trunk', x1: pos[a].x, y1: pos[a].y, x2: pos[b].x, y2: pos[b].y,
+                                         'data-key': linkKey(a, b) }, links);
+  [['operator', 'ai'], ['ai', 'model'], ['model', 'check'], ['ai', 'check'], ['check', 'validator'],
+   ['validator', 'nsot'], ['validator', 'operator'], ['ai', 'controller'], ['detect', 'ai'], ['ai', 'logs'],
+   ['detect', 'controller']].forEach(([a, b]) => edge(a, b));
+  sws.forEach(s => edge('controller', s));
+
+  // Step 4: the parts.
+  const node = (n, kind, title, sub) => {
+    const g = svgEl('g', { class: 'n ' + kind, id: 'ai-n-' + n, transform: `translate(${pos[n].x},${pos[n].y})` }, nodes);
+    svgEl('rect', { x: -60, y: -22, width: 120, height: 44, rx: 6 }, g);
+    svgEl('text', { class: 'name', y: -2 }, g).textContent = title;
+    const st = svgEl('text', { class: 'sub', y: 14 }, g);
+    st.textContent = sub;
+    g.dataset.sub = sub;
+  };
+  node('operator', 'host', 'Operator', 'console / terminal');
+  node('ai', 'ai', 'AI layer', 'b1 / b2 / b3 .py');
+  node('model', 'ext', 'Model', AI.model);
+  node('logs', 'host', 'Logs', 'cost + events');
+  node('detect', 'code', 'Detectors', 'code thresholds');
+  node('check', 'code', 'Answer check', 'schema + NSOT names');
+  node('validator', 'code', 'NSOT validator', 'protected flows');
+  node('nsot', 'host', 'NSOT', 'nsot.json');
+  node('controller', 'ctrl', 'Controller', 'Ryu REST :8080');
+  sws.forEach(s => node(s, 'switch', s, VENDORS[t.switches[s].vendor] || 'switch'));
+  svgEl('circle', { id: 'ai-dot', class: 'dot', r: 8, cx: -50, cy: -50 }, dotLayer);
+  AI.built = true;
+  return true;
+}
+
+/* One event -> one step {title, text, hops, tone, light}. */
+function aiStep(e) {
+  const sws = Object.keys(names.topology.switches).sort();
+  const sw = e.switch && AI.pos[e.switch] ? e.switch : null;
+  const app = APP_NAMES[e.app] || 'AI layer';
+  const money = c => c == null ? 'cost not reported' : '$' + Number(c).toFixed(6);
+  switch (e.kind) {
+    case 'run_start':
+      return { title: app + ' starts', tone: 'neutral', hops: ['operator', 'ai'],
+               text: e.app === 'b2' ? `You asked: "${e.request}". The AI layer will only translate it with the model; code decides where and how a rule goes.`
+                   : e.app === 'b3' ? `The closed loop starts in ${String(e.mode).toUpperCase()} mode for ${e.duration} s. It stops by itself: time limit, call cap, or the STOP file.`
+                   : `The analyst starts${e.prompt ? ' with prompt ' + e.prompt : ''}${e.scenario ? ' on snapshot ' + e.scenario : ''}.` };
+    case 'collect':
+      return { title: 'Read every switch', tone: 'neutral', hops: ['ai', 'controller', sws[0], 'controller', 'ai'],
+               light: sws, text: `${plural(e.switches || 0, 'switch', 'switches')} read through the controller's REST API in ${e.rest_calls || '?'} calls: flow tables, port counters twice (for packets per second), port up/down, and the TCP sensor. No model is involved in reading the network.` };
+    case 'detect':
+      return { title: 'Detector fired: ' + e.gate, tone: 'bad', hops: ['controller', 'detect', 'ai'], light: sw ? [sw] : [],
+               text: `A code threshold (b3_policy.json) flagged ${e.gate.replace('_', ' ')} for ${e.target}${e.switch ? ' (seen on ' + e.switch + ')' : ''}. Nothing happens on this alone: the model is asked next, without being told what the detector suspects.` };
+    case 'llm_request':
+      return { title: 'Call to the model', tone: 'uni', hops: ['ai', 'model'],
+               text: `Prompt "${e.purpose}" sent to ${e.model}: ${e.prompt_chars} characters. Answered in ${e.seconds} s: ${e.prompt_tokens} tokens in, ${e.completion_tokens} out (${e.reasoning_tokens || 0} of them reasoning), ${money(e.cost_usd)}. Logged in api_calls.jsonl without the prompt or the key.` };
+    case 'llm_response':
+      return { title: e.valid ? 'Answer accepted by the checks' : 'Answer rejected', tone: e.valid ? 'good' : 'bad',
+               hops: ['model', 'check'],
+               text: e.valid ? `The answer is valid JSON, matches the schema, and every device it names exists in the NSOT.`
+                             : `Rejected: ${(e.errors || []).join('; ')}. ${e.attempt === 1 ? 'The model gets one repair try, shown these exact errors.' : 'Second failure: the answer is thrown away and nothing is done.'}` };
+    case 'validate':
+      return { title: e.ok ? 'NSOT validator: accepted' : 'NSOT validator: refused', tone: e.ok ? 'good' : 'bad',
+               hops: ['check', 'validator', 'nsot', 'validator'], light: sw ? [sw] : [],
+               text: `${e.what ? e.what + '. ' : ''}${e.ok ? 'Passed' : 'Refused'}: ${(e.reasons || []).join('; ')}.` };
+    case 'approval_request':
+      return { title: 'Asking the operator', tone: 'neutral', hops: ['validator', 'operator'],
+               text: `The validated plan (${e.title}) is waiting for a human${e.where ? ' in the ' + e.where : ''}`
+                   + `${String(e.where || '').includes('console') ? ' (Approve / Reject at the top right of this tab)' : ''}.`
+                   + ` The first answer wins; no answer in ${e.timeout} s counts as no. Nothing changes until then.` };
+    case 'approval': {
+      const by = e.by ? String(e.by) : '';
+      return { title: (e.mode === 'auto' ? 'AUTO mode: ' : 'Human: ') + (e.decision ? 'yes' : 'no') + (by && e.mode !== 'auto' ? ' (' + by + ')' : ''),
+               tone: e.decision ? 'good' : 'bad', hops: ['operator', 'ai'],
+               text: e.mode === 'auto' ? 'AUTO mode: detector, model and validator all agreed, so the action goes ahead without asking.'
+                   : e.decision ? `The operator saw the interpretation, the exact rule and the validator's checks, and approved it${by ? ' in the ' + by.replace('auto-confirm (test)', 'test script (--yes)') : ''}. The AI layer now applies exactly that plan.`
+                   : by === 'timeout' ? 'Nobody answered in time, which counts as no: nothing is changed.'
+                   : `The operator rejected it${by ? ' (' + by + ')' : ''}: nothing is changed.` };
+    }
+    case 'apply':
+      return { title: 'Sent to ' + (e.switch || 'the switch'), tone: 'good', hops: ['ai', 'controller'].concat(sw ? [sw] : []),
+               light: sw ? [sw] : [], text: `${e.what}, through ${e.rest} on the controller (the same REST path as Part A). AI rules use cookie 0xB0/0xB1, priority 20-40, and remove themselves.` };
+    case 'verify':
+      return { title: e.ok ? 'Verified' : 'Not verified', tone: e.ok ? 'good' : 'bad',
+               hops: (sw ? [sw] : []).concat(['controller', 'ai']), light: sw ? [sw] : [],
+               text: e.what ? e.what : (e.ok ? 'Read the switch back: the change is there.' : 'Read the switch back: the change is NOT there.') };
+    case 'refuse':
+      return { title: 'Refused, nothing done', tone: 'bad', hops: ['ai', 'operator'], text: e.why || 'refused' };
+    case 'report':
+      return { title: e.app === 'b1' ? 'Report: ' + (e.health || '') : 'Report', tone: e.health === 'healthy' ? 'good' : 'neutral',
+               hops: ['ai', 'operator'],
+               text: e.findings ? (e.findings.length ? 'Findings: ' + e.findings.join('; ') + '.' : 'No findings.')
+                   : `Scored against the planted issues: found ${e.found}, missed ${e.missed}, false alarms ${e.false_alarms}.` };
+    case 'run_end':
+      return { title: app + ' finished', tone: 'neutral', hops: ['ai', 'logs'],
+               text: 'Finished. ' + Object.entries(e).filter(([k]) => !['kind', 't', 'app', 'id', 'received'].includes(k))
+                 .map(([k, v]) => k.replace(/_/g, ' ') + ' ' + v).join(', ') + '.' };
+    default:
+      return { title: e.kind, tone: 'neutral', hops: ['ai'], text: JSON.stringify(e) };
+  }
+}
+
+/* Runs: events from one run_start up to the next one. */
+function aiRuns() {
+  const runs = [];
+  AI.events.forEach(e => {
+    if (e.kind === 'run_start' || !runs.length) runs.push({ start: e, events: [] });
+    runs[runs.length - 1].events.push(e);
+  });
+  return runs;
+}
+
+const AI_EXAMPLES = {
+  'B1 analyst': [
+    { kind: 'run_start', app: 'b1', prompt: 'v3_checklist' },
+    { kind: 'collect', app: 'b1', switches: 6, rest_calls: 32 },
+    { kind: 'llm_request', app: 'b1', purpose: 'b1_analyst_v3_checklist', model: 'deepseek-v4.1-flash', prompt_chars: 9000, seconds: 6, prompt_tokens: 3100, completion_tokens: 600, reasoning_tokens: 300, cost_usd: 0.0008 },
+    { kind: 'llm_response', app: 'b1', valid: true },
+    { kind: 'report', app: 'b1', health: 'degraded', findings: ['warning link_failure on arista1', 'critical unauthorized_flow on hp1'] },
+    { kind: 'run_end', app: 'b1', calls: 1 }],
+  'B2 accepted': [
+    { kind: 'run_start', app: 'b2', request: 'Block pc1 from pinging srv1' },
+    { kind: 'llm_request', app: 'b2', purpose: 'b2_intent', model: 'deepseek-v4.1-flash', prompt_chars: 2400, seconds: 3, prompt_tokens: 900, completion_tokens: 150, reasoning_tokens: 80, cost_usd: 0.0002 },
+    { kind: 'llm_response', app: 'b2', valid: true },
+    { kind: 'validate', app: 'b2', switch: 'arista1', ok: true, reasons: ['simulated 36 protected packets (DNS, DHCP, management): none disrupted', 'no duplicate or conflicting AI rule on arista1'] },
+    { kind: 'approval_request', app: 'b2', title: 'B2 intent: "Block pc1 from pinging srv1"', where: 'console and terminal', timeout: 120 },
+    { kind: 'approval', app: 'b2', mode: 'human', decision: true, by: 'console' },
+    { kind: 'apply', app: 'b2', switch: 'arista1', what: 'INSTALL on arista1: DROP ICMP from pc1 to srv1 at port 2', rest: '/stats/flowentry/add' },
+    { kind: 'verify', app: 'b2', switch: 'arista1', ok: true }],
+  'B2 refused': [
+    { kind: 'run_start', app: 'b2', request: 'Block all traffic going to srv1' },
+    { kind: 'llm_request', app: 'b2', purpose: 'b2_intent', model: 'deepseek-v4.1-flash', prompt_chars: 2400, seconds: 3, prompt_tokens: 900, completion_tokens: 150, reasoning_tokens: 80, cost_usd: 0.0002 },
+    { kind: 'llm_response', app: 'b2', valid: true },
+    { kind: 'validate', app: 'b2', switch: 'hp1', ok: false, reasons: ['would disrupt protected traffic: DNS reply r1 -> srv1; DHCP reply r1 -> srv1'] },
+    { kind: 'refuse', app: 'b2', why: 'The validator refused it: dropping everything to srv1 would also drop the router\'s DNS and DHCP replies to srv1 (protected flows in the NSOT).' }],
+  'B3 flood': [
+    { kind: 'run_start', app: 'b3', mode: 'auto', duration: 300 },
+    { kind: 'collect', app: 'b3', switches: 6, rest_calls: 32 },
+    { kind: 'detect', app: 'b3', gate: 'traffic_flood', target: 'pc1', switch: 'arista1' },
+    { kind: 'llm_request', app: 'b3', purpose: 'b3_classify', model: 'deepseek-v4.1-flash', prompt_chars: 3000, seconds: 4, prompt_tokens: 1100, completion_tokens: 200, reasoning_tokens: 120, cost_usd: 0.0003 },
+    { kind: 'llm_response', app: 'b3', valid: true },
+    { kind: 'validate', app: 'b3', switch: 'arista1', ok: true, what: 'BLOCK all from pc1 at arista1 port 2 for 120 s', reasons: ['no meters on arista1: falls back to a temporary block'] },
+    { kind: 'approval', app: 'b3', mode: 'auto', decision: true },
+    { kind: 'apply', app: 'b3', switch: 'arista1', what: 'BLOCK all from pc1 at arista1 port 2 for 120 s', rest: '/stats/flowentry/add' },
+    { kind: 'collect', app: 'b3', switches: 6, rest_calls: 32 },
+    { kind: 'verify', app: 'b3', ok: true, what: 'traffic_flood pc1 cleared: pc1\'s forwarded traffic is back to normal' }]
+};
+
+function aiShow(view) {
+  // view: {type: 'run', index} or {type: 'example', name}
+  AI.view = view;
+  const evs = view.type === 'example' ? AI_EXAMPLES[view.name] : (aiRuns()[view.index] || { events: [] }).events;
+  AI.steps = evs.map(aiStep);
+  document.querySelectorAll('#ai-examples .btn').forEach(b => b.setAttribute('aria-checked', String(view.type === 'example' && b.dataset.ex === view.name)));
+  $('ai-steps').innerHTML = AI.steps.map((s, k) => `<li><button type="button" data-i="${k}">${esc(s.title)}</button></li>`).join('');
+  const calls = evs.filter(e => e.kind === 'llm_request');
+  const cost = calls.reduce((a, e) => a + (e.cost_usd || 0), 0);
+  const tokens = calls.reduce((a, e) => a + (e.prompt_tokens || 0) + (e.completion_tokens || 0), 0);
+  $('ai-cost').textContent = calls.length ? `${plural(calls.length, 'model call', 'model calls')}, ${tokens} tokens, $${cost.toFixed(6)}${view.type === 'example' ? ' (example numbers)' : ''}.` : 'No model calls in this run.';
+  aiGo(view.type === 'example' ? 0 : Math.max(0, AI.steps.length - 1), 'end');
+}
+
+function aiRender(i) {
+  const s = AI.steps[i], svg = $('ai-svg');
+  svg.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
+  svg.querySelectorAll('.n.active').forEach(e => e.classList.remove('active'));
+  if (!s) { $('ai-title').textContent = 'Nothing yet'; $('ai-text').textContent = 'Run b1_analyst.py, b2_intent.py or b3_responder.py on the laptop: each step appears here.'; $('ai-count').textContent = ''; return; }
+  for (let k = 0; k + 1 < s.hops.length; k++) {
+    const e = svg.querySelector(`[data-key="${linkKey(s.hops[k], s.hops[k + 1])}"]`);
+    if (e) { e.classList.add('on'); setTone(e, s.tone); }
+  }
+  new Set(s.hops.concat(s.light || [])).forEach(n => { const g = $('ai-n-' + n); if (g) { g.classList.add('active'); setTone(g, s.tone); } });
+  $('ai-count').textContent = `Step ${i + 1} of ${AI.steps.length}`;
+  $('ai-title').textContent = s.title;
+  $('ai-text').textContent = s.text;
+  document.querySelectorAll('#ai-steps li').forEach((li, k) => {
+    if (k === i) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+}
+
+function aiPlace(name, tone) {
+  const dot = $('ai-dot');
+  setTone(dot, tone);
+  if (!name || !AI.pos[name]) { dot.style.display = 'none'; return; }
+  dot.style.display = '';
+  dot.setAttribute('cx', AI.pos[name].x);
+  dot.setAttribute('cy', AI.pos[name].y + DOT_DY);
+}
+
+function aiMove(a, b, tone, token) {
+  return new Promise(resolve => {
+    const A = AI.pos[a], B = AI.pos[b], dot = $('ai-dot');
+    if (!A || !B) return resolve(true);
+    setTone(dot, tone);
+    const dur = reduceMotion ? 0 : Math.max(400, Math.min(1000, Math.hypot(B.x - A.x, B.y - A.y) * 2.2));
+    const t0 = performance.now();
+    (function frame(now) {
+      if (token !== AI.token) return resolve(false);
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      dot.setAttribute('cx', A.x + (B.x - A.x) * e);
+      dot.setAttribute('cy', A.y + (B.y - A.y) * e + DOT_DY);
+      if (k < 1) requestAnimationFrame(frame); else resolve(true);
+    })(t0);
+  });
+}
+
+async function aiAnimate(i, token) {
+  const s = AI.steps[i];
+  if (!s) return true;
+  aiPlace(s.hops[0], s.tone);
+  for (let k = 0; k + 1 < s.hops.length; k++) if (!await aiMove(s.hops[k], s.hops[k + 1], s.tone, token)) return false;
+  return true;
+}
+
+function aiGo(i, mode) {
+  AI.playing = false;
+  $('ai-play').textContent = 'Play';
+  const token = ++AI.token;
+  AI.i = Math.max(0, Math.min(i, AI.steps.length - 1));
+  aiRender(AI.i);
+  const s = AI.steps[AI.i];
+  if (!s) { aiPlace(null); return; }
+  if (mode === 'animate') aiAnimate(AI.i, token);
+  else aiPlace(mode === 'end' ? s.hops[s.hops.length - 1] : s.hops[0], s.tone);
+}
+
+async function aiPlay(from) {
+  if (AI.playing && from == null) { aiGo(AI.i, 'end'); return; }
+  if (from != null) AI.i = from; else if (AI.i >= AI.steps.length - 1) AI.i = 0;
+  AI.playing = true;
+  $('ai-play').textContent = 'Pause';
+  const token = ++AI.token;
+  for (let i = AI.i; i < AI.steps.length; i++) {
+    AI.i = i;
+    aiRender(i);
+    if (!await aiAnimate(i, token)) return;
+    if (!await new Promise(r => setTimeout(() => r(token === AI.token), Math.min(6500, 1500 + AI.steps[i].text.length * 18)))) return;
+  }
+  AI.playing = false;
+  $('ai-play').textContent = 'Play';
+}
+
+function aiFillRuns() {
+  const runs = aiRuns(), sel = $('ai-runs'), keep = sel.value;
+  sel.innerHTML = runs.length ? runs.map((r, k) => {
+    const e = r.start, when = new Date((e.t || e.received) * 1000).toLocaleTimeString();
+    const what = e.app === 'b2' ? `"${e.request}"` : e.app === 'b3' ? `${e.mode} ${e.duration} s` : (e.prompt || '');
+    return `<option value="${k}">${esc(when)}  ${esc(APP_NAMES[e.app] || e.kind)}  ${esc(what)}  (${r.events.length} steps)</option>`;
+  }).reverse().join('') : '<option value="">no live activity yet</option>';
+  if (keep !== '' && runs[keep]) sel.value = keep;
+}
+
+async function aiPoll() {
+  if (!AI.built && !aiDraw()) return;
+  if (!AI.view) {
+    $('ai-examples').innerHTML = Object.keys(AI_EXAMPLES).map(n => `<button class="btn" type="button" role="radio" data-ex="${esc(n)}">${esc(n)}</button>`).join(' ');
+    AI.view = { type: 'example', name: 'B2 accepted' };
+  }
+  try {
+    const d = await api('/lab9/ai/events?since=' + AI.lastId);
+    notice('ai', '');
+    if (!d.events.length) {
+      if (!AI.events.length && AI.view.type === 'example' && !AI.steps.length) aiShow(AI.view);
+      return;
+    }
+    const firstLoad = AI.lastId === 0;
+    AI.events = AI.events.concat(d.events).slice(-1500);
+    AI.lastId = d.last_id;
+    const m = d.events.find(e => e.kind === 'llm_request' && e.model);
+    if (m && m.model !== AI.model) { AI.model = m.model; const st = document.querySelector('#ai-n-model .sub'); if (st) st.textContent = m.model; }
+    aiFillRuns();
+    const latest = aiRuns().length - 1;
+    if (firstLoad) { $('ai-runs').value = String(latest); aiShow({ type: 'run', index: latest }); return; }
+    if ($('ai-follow').checked) {
+      const was = AI.view.type === 'run' ? AI.steps.length : 0;
+      const same = AI.view.type === 'run' && AI.view.index === latest;
+      $('ai-runs').value = String(latest);
+      AI.view = { type: 'run', index: latest };
+      AI.steps = aiRuns()[latest].events.map(aiStep);
+      aiShow(AI.view);
+      if (!AI.playing) aiPlay(same ? Math.min(was, AI.steps.length - 1) : 0);
+    }
+  } catch (e) {
+    notice('ai', 'Cannot read the AI event feed (/lab9/ai/events): ' + e.message, true);
+    if (!AI.steps.length) aiShow(AI.view);
+  }
+}
+
+$('ai-back').addEventListener('click', () => aiGo(AI.i - 1, 'start'));
+$('ai-next').addEventListener('click', () => aiGo(AI.i + 1, 'animate'));
+$('ai-play').addEventListener('click', () => aiPlay());
+$('ai-steps').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) aiGo(+b.dataset.i, 'animate'); });
+$('ai-runs').addEventListener('change', ev => { if (ev.target.value !== '') { $('ai-follow').checked = false; aiShow({ type: 'run', index: +ev.target.value }); } });
+$('ai-examples').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) { $('ai-follow').checked = false; aiShow({ type: 'example', name: b.dataset.ex }); aiPlay(0); } });
+
+/* =====================================================================
+   Operator approvals (AI layer tab)
+   =====================================================================
+   B2 and B3 (HITL) POST a question to /lab9/ai/approvals and wait.
+   1. apLoad()    reads the requests every 2 s, on every tab (tab badge)
+   2. apRender()  one card per pending request: what will change, what was
+                  checked, a countdown, Approve / Reject
+   3. apDecide    a click POSTs the decision; the AI layer (polling the same
+                  request) applies its validated plan only on "approved"
+   ===================================================================== */
+const AP = { pending: [], shown: null, received: 0 };
+
+async function apLoad() {
+  let d;
+  try { d = await api('/lab9/ai/approvals'); } catch (e) { return; }   // older controller: no approvals
+  // Step 1: pending requests, and when we got them (for the countdown).
+  AP.pending = d.approvals.filter(a => a.status === 'pending');
+  AP.received = performance.now();
+  // Step 2: badge on the "AI layer" tab, so a request is seen from any tab.
+  const tab = $('tab-ai');
+  let badge = tab.querySelector('.badge');
+  if (AP.pending.length) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'badge'; tab.appendChild(badge); }
+    badge.textContent = AP.pending.length;
+    badge.setAttribute('aria-label', plural(AP.pending.length, 'request', 'requests') + ' waiting for approval');
+  } else if (badge) badge.remove();
+  apRender(d.approvals);
+}
+
+function apRender(all) {
+  // Step 1: rebuild the cards only when the set of requests changes (keeps
+  //         focus and hover steady between polls).
+  const ids = AP.pending.map(a => a.id).join(',');
+  if (ids !== AP.shown) {
+    AP.shown = ids;
+    $('ai-approvals').hidden = !AP.pending.length;
+    $('ai-approval-list').innerHTML = AP.pending.map(a => `
+      <article class="approval" data-id="${a.id}">
+        <div class="who">${esc(APP_NAMES[a.app] || a.app)} · request #${a.id}</div>
+        <h4>${esc(a.title)}</h4>
+        ${a.interpretation ? `<p>${esc(a.interpretation)}</p>` : ''}
+        <div class="label">What will change</div>
+        <pre class="cmd">${esc(a.steps.join('\n'))}</pre>
+        ${a.checks.length ? `<div class="label">Checked before asking you</div>
+          <ul>${a.checks.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+        <div class="left" data-left></div>
+        <div class="row">
+          <button class="btn approve" type="button" data-decide="yes">Approve</button>
+          <button class="btn reject" type="button" data-decide="no">Reject</button>
+        </div>
+      </article>`).join('');
+  }
+  apTick();
+  // Step 2: the last few decisions, with who made them.
+  const done = all.filter(a => a.status !== 'pending').slice(0, 6);
+  $('ai-decided-none').hidden = done.length > 0;
+  $('ai-decided').innerHTML = done.map(a => {
+    const yes = a.status === 'approved';
+    const when = new Date(a.decided * 1000).toLocaleTimeString();
+    const by = a.decided_by === 'timeout' ? 'nobody answered in time' : 'by ' + a.decided_by;
+    const label = a.status.charAt(0).toUpperCase() + a.status.slice(1);
+    return `<li><span class="${yes ? 'yes' : 'no'}">${esc(label)}</span> ${esc(by)}, ${esc(when)}: ${esc(a.title)}</li>`;
+  }).join('');
+}
+
+function apTick() {
+  const gone = (performance.now() - AP.received) / 1000;
+  AP.pending.forEach(a => {
+    const el = document.querySelector(`.approval[data-id="${a.id}"] [data-left]`);
+    if (!el) return;
+    const s = Math.max(0, Math.round(a.seconds_left - gone));
+    el.textContent = s ? `No answer in ${s} s counts as Reject.` : 'Time is up: counts as Reject.';
+  });
+}
+setInterval(apTick, 1000);
+
+$('ai-approval-list').addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-decide]');
+  if (!b) return;
+  const card = b.closest('.approval'), id = +card.dataset.id, yes = b.dataset.decide === 'yes';
+  card.querySelectorAll('button').forEach(x => { x.disabled = true; });
+  try {
+    const r = await fetch(API + '/lab9/ai/approvals/decide', { method: 'POST',
+      body: JSON.stringify({ id: id, approve: yes, by: 'console' }) });
+    const d = await r.json();
+    if (r.status === 409) notice('aiap', `Request #${id} was already decided: ${d.error}.`, true);
+    else if (!r.ok) throw new Error(d.error || ('status ' + r.status));
+    else notice('aiap', yes ? `Approved request #${id}. The AI layer applies it within a second; the steps on the left show it happening.`
+                            : `Rejected request #${id}. Nothing in the network changes.`);
+  } catch (e) {
+    notice('aiap', 'Could not send the decision: ' + e.message, true);
+    card.querySelectorAll('button').forEach(x => { x.disabled = false; });
+    return;
+  }
+  apLoad();
+});
+
 /* ---------------- Refresh loop ---------------- */
 let offline = false;   // only the "cannot reach" message clears itself
 async function refresh() {
   if (current === 'how') { initHow(); return; }     // the map has no live data to poll
+  if (current === 'ai') { aiPoll(); return; }       // new AI-layer events every 2 s
   if (current === 'trace') {                        // traces run on request, not every 2 s
     if (!TR.built && initTrace()) runTrace();       // first visit: trace the default pair once
     return;
@@ -1671,9 +2199,10 @@ async function start() {
   } catch (e) { /* names stay as numbers */ }
   const fromPath = location.pathname.includes('/dhcp/') ? 'dhcp' : 'dns';
   const fromHash = location.hash.slice(1);
-  showApp(['dns', 'dhcp', 'trace', 'how'].includes(fromHash) ? fromHash : fromPath);
+  showApp(['dns', 'dhcp', 'trace', 'ai', 'how'].includes(fromHash) ? fromHash : fromPath);
   loadSwitches();
-  setInterval(() => { if (!document.hidden) { refresh(); loadSwitches(); } }, 2000);
+  apLoad();
+  setInterval(() => { if (!document.hidden) { refresh(); loadSwitches(); apLoad(); } }, 2000);
 }
 start();
 </script>

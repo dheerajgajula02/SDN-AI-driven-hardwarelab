@@ -91,3 +91,20 @@ lab9/
 ├── docs/            # build log, design notes, physical-lab porting
 └── logs/            # API cost log, false-positive log, evidence
 ```
+
+## Part B: how to run (laptop)
+
+Settings: copy `.env.example` to `.env` and fill in `LAB9_LLM_API_KEY` (never committed).
+Console: `http://<controller>:8080/lab9/ui#ai` shows every AI step live, and is where you
+**Approve / Reject** what B2 and B3 (HITL) want to change. You can also answer y/N in the
+terminal; the first answer wins, and no answer in time counts as Reject.
+
+```
+python3 part_b/b1_analyst.py   --controller 100.110.3.67:8080            # B1 report
+python3 part_b/b2_intent.py    --controller 100.110.3.67:8080 "block pc1 from pinging srv1"
+python3 part_b/b2_intent.py    --controller 100.110.3.67:8080 --list | --clear
+python3 part_b/b3_responder.py --controller 100.110.3.67:8080 --mode hitl --duration 300
+python3 part_b/b3_responder.py --controller 100.110.3.67:8080 --mode auto --duration 300
+python3 part_b/cost_report.py                                            # B5 cost table
+touch part_b/STOP                                                        # kill switch: no more model calls
+```

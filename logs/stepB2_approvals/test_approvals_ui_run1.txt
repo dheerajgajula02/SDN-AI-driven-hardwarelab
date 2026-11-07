@@ -1,0 +1,71 @@
+PASS  control: pc1 pings srv1 and opens its web page; no intent rules
+
+I understood: Block ICMP (ping) traffic from pc1 to srv1.
+  INSTALL on arista1 (arista): priority 30, DROP {"eth_src": "00:00:00:00:10:11", "eth_type": 2048, "in_port": 2, "ip_proto": 1, "ipv4_dst": "10.10.20.21"}, removes itself after 1800 s
+      ok: switch arista1 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on arista1
+Waiting for approval #3: answer in the console (http://100.110.3.67:8080/lab9/ui#ai). No answer in 90 s = NO.
+PASS  A1 the request appears as a card, with a badge "1" on the AI layer tab (seen from the DNS tab)
+        badge='1'
+PASS  A1 the card shows the exact rule (arista1, DROP, ICMP), the validator checks and a countdown
+        
+        B2 intent · request #3
+        B2 intent: "Block pc1 from pinging srv1"
+        Block ICMP (ping) traffic from pc1 to srv1.
+        What will change
+        INSTALL on arista1 (arista): priority 30, DROP {"eth_src": "00:00:00:00:10:11", "eth_type": 2048, "in_port": 2, "ip_proto": 1, "ipv4_dst": "10.10.20.21"}, removes itself after 1800 s
+        Checked before asking you
+          switch 
+PASS  A1 nothing is installed while waiting
+APPROVED by console
+PASS  A1 APPROVE in the console -> applied and verified on arista1, decided by "console"
+        ('applied', 'console')
+PASS  A1 on the wire: pc1 -> srv1 ping FAILS, web still WORKS (only ICMP blocked)
+PASS  A1 a second answer to the decided request is refused (409: first answer wins)
+        409
+
+I understood: Remove any earlier block so pc1 can ping srv1 (ICMP) again.
+  DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}
+      ok: cookie 176 (ai_intent) may be deleted by the AI
+Waiting for approval #4: answer in the console (http://100.110.3.67:8080/lab9/ui#ai). No answer in 90 s = NO.
+PASS  A2 "allow" request shown as a DELETE of the block on arista1
+        B2 INTENT · REQUEST #4
+B2 intent: "Allow pc1 to ping srv1 again"
+
+Remove any earlier block so pc1 can ping srv1 (ICMP) again.
+
+What will change
+DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}
+Checked bef
+NOT approved by console
+PASS  A2 REJECT -> declined by "console", the block stays, ping still FAILS
+        ('declined', 'console', 1)
+
+I understood: Remove any earlier block so pc1 can ping srv1 again.
+  DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}
+      ok: cookie 176 (ai_intent) may be deleted by the AI
+Waiting for approval #5: answer in the console (http://100.110.3.67:8080/lab9/ui#ai). No answer in 12 s = NO.
+NOT approved by timeout
+PASS  A3 nobody answers in 12 s -> NO (by timeout), block stays, console says "nobody answered in time"
+        ('declined', 'timeout', 'expired nobody answered in time, 4:09:17 PM: B2 intent: "Allow pc1 to ping srv1 again"rejected by console, 4:08:58 PM: B2 intent: "Allow pc1 to ping srv1 again"approved by console, 4:08:49 PM: B2 inte')
+
+I understood: Remove any earlier block so pc1 can ping srv1 (ICMP) again.
+  DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}
+      ok: cookie 176 (ai_intent) may be deleted by the AI
+Waiting for approval #6: answer in the console (http://100.110.3.67:8080/lab9/ui#ai). No answer in 90 s = NO.
+APPROVED by console
+PASS  A4 APPROVE the allow -> block deleted (verified), ping pc1 -> srv1 WORKS again
+        ('applied', [])
+PASS  C1 no request pending: badge gone, approval box hidden
+        ('', True)
+PASS  C2 the diagram's steps for the last run include "Asking the operator" and "Human: yes (console)"
+        B2 intent startsCall to the modelAnswer accepted by the checksNSOT validator: acceptedAsking the operatorHuman: yes (console)Sent to arista1VerifiedB2 intent finished
+FAIL  C3 recent decisions list all four answers (approved, rejected, timeout, approved)
+        approved by console, 4:09:24 PM: B2 intent: "Allow pc1 to ping srv1 again"expired nobody answered in time, 4:09:17 PM: B2 intent: "Allow pc1 to ping srv1 again"rejected by console, 4:08:58 PM: B2 intent: "Allow pc1 to ping srv1 again"approved by console, 4:08:49 PM: B2 intent: "Block pc1 from pingin
+PASS  C4 no JavaScript errors on the page
+        []
+
+14/15 checks passed  (model calls: 4)

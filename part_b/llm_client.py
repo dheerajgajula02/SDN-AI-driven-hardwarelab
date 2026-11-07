@@ -19,6 +19,11 @@ key, model and provider can be changed without touching code:
   LAB9_LLM_MODEL       the model (team choice: deepseek-v4.1-flash)
   LAB9_LLM_BASE_URL    the provider's OpenAI-compatible URL
   LAB9_LLM_MAX_CALLS   optional: cap per run (default 60)
+  LAB9_LLM_REASONING   optional: off | low | medium | high | default
+                       (reasoning models think before answering; that thinking
+                       uses the same token budget as the answer. Measured on
+                       deepseek-v4.1-flash: default 1817 reasoning tokens,
+                       low 467, off 0, for the same answer.)
 All three of key, model and base URL are required: nothing is guessed.
 
 Any OpenAI-compatible chat-completions endpoint works. Standard library only.
@@ -44,6 +49,9 @@ HTTP_TRIES = 3                                   # per answer
 SCHEMA_TRIES = 2                                 # first answer + one repair
 
 _calls_this_run = [0]                            # shared counter for the cap
+# Optional: a function called with a dict after every request and answer
+# check (events.llm_hook sets it, so the console can show each call).
+EVENT_HOOK = None
 # opencode's Go plan refuses requests without an x-opencode-session header
 # (HTTP 400 MissingSessionID). One id per run groups this run's calls.
 RUN_SESSION = 'lab9-' + uuid.uuid4().hex
@@ -82,7 +90,20 @@ def load_settings(env_file=ENV_FILE):
         'base_url': get('LAB9_LLM_BASE_URL').rstrip('/'),
         'model': get('LAB9_LLM_MODEL'),
         'max_calls': int(get('LAB9_LLM_MAX_CALLS', '60')),
+        'reasoning': get('LAB9_LLM_REASONING', 'default'),
     }
+
+
+def reasoning_fields(level):
+    """Request fields for a reasoning level (OpenAI-compatible names; both
+    accepted by opencode for deepseek-v4.1-flash, measured)."""
+    if level == 'off':
+        return {'thinking': {'type': 'disabled'}}
+    if level in ('low', 'medium', 'high'):
+        return {'reasoning_effort': level}
+    if level in (None, '', 'default'):
+        return {}
+    raise LLMError('LAB9_LLM_REASONING must be off, low, medium, high or default (got %r)' % level)
 
 
 # ===========================================================================
@@ -217,9 +238,12 @@ def post_chat(settings, payload, purpose, attempt_label, log_file=None):
             req = urllib.request.Request(settings['base_url'] + '/chat/completions', body, headers)
             with urllib.request.urlopen(req, timeout=90) as r:
                 data = json.loads(r.read().decode('utf-8'))
-            entry.update(status=200, seconds=round(time.time() - started, 2))
+            entry.update(status=200, seconds=round(time.time() - started, 2),
+                         reasoning=settings.get('reasoning', 'default'),
+                         finish_reason=((data.get('choices') or [{}])[0]).get('finish_reason'))
             entry.update(usage_fields(data.get('usage')))
             log_call(entry, log_file)
+            _hook(dict(entry, kind='llm_request'))
             return data
         except urllib.error.HTTPError as e:
             # Step 3: log the failure; retry only if it is temporary.
@@ -243,7 +267,7 @@ def post_chat(settings, payload, purpose, attempt_label, log_file=None):
 # ===========================================================================
 
 def call_llm(purpose, system, user, schema, extra_check=None, max_tokens=4000,
-             temperature=0, settings=None, log_file=None):
+             temperature=0, settings=None, log_file=None, reasoning=None):
     """Ask the model; return {'answer': validated JSON, 'calls': n, 'repaired': bool}.
 
     purpose      short label for the cost log, e.g. "b1_analyst"
@@ -255,7 +279,10 @@ def call_llm(purpose, system, user, schema, extra_check=None, max_tokens=4000,
     The first answer that fails gets ONE repair try: the model is shown its
     own answer and the exact errors. A second failure raises LLMError, so
     the caller never acts on an unchecked answer."""
-    settings = settings or load_settings()
+    settings = dict(settings or load_settings())
+    if reasoning is not None:                       # per-call override (experiments)
+        settings['reasoning'] = reasoning
+    extra = reasoning_fields(settings.get('reasoning'))
     if not isinstance(user, str):
         user = json.dumps(user, indent=1, sort_keys=True)
     # The model must SEE the schema it is checked against. (First live test
@@ -270,13 +297,18 @@ def call_llm(purpose, system, user, schema, extra_check=None, max_tokens=4000,
     errors = []
     for attempt in range(1, SCHEMA_TRIES + 1):
         # Step 1: ask (with HTTP retries inside post_chat).
-        data = post_chat(settings, {'model': settings['model'], 'messages': messages,
-                                    'max_tokens': max_tokens, 'temperature': temperature},
+        data = post_chat(settings, dict({'model': settings['model'], 'messages': messages,
+                                         'max_tokens': max_tokens, 'temperature': temperature}, **extra),
                          purpose, 'answer%d' % attempt, log_file)
-        text = ((data.get('choices') or [{}])[0].get('message') or {}).get('content') or ''
+        choice = (data.get('choices') or [{}])[0]
+        text = (choice.get('message') or {}).get('content') or ''
 
-        # Step 2: it must be JSON ...
+        # Step 2: it must be complete JSON ...
         try:
+            if choice.get('finish_reason') == 'length':
+                used = usage_fields(data.get('usage'))
+                raise ValueError('the answer was cut off: max_tokens %d reached (%s of them spent reasoning)'
+                                 % (max_tokens, used['reasoning_tokens']))
             answer = parse_json_answer(text)
             # Step 3: ... pass the schema ...
             errors = schema_errors(answer, schema)
@@ -284,11 +316,14 @@ def call_llm(purpose, system, user, schema, extra_check=None, max_tokens=4000,
             if not errors and extra_check:
                 errors = list(extra_check(answer) or [])
         except ValueError as e:
-            answer, errors = None, ['not valid JSON: %s' % e]
+            answer = None
+            errors = [str(e) if 'cut off' in str(e) else 'not valid JSON: %s' % e]
 
         # Step 5: record the verdict in the cost log, then return or repair.
         log_call({'time': datetime.now().isoformat(), 'purpose': purpose, 'model': settings['model'],
                   'attempt': 'answer%d/check' % attempt, 'valid': not errors, 'errors': errors[:5]}, log_file)
+        _hook({'kind': 'llm_response', 'purpose': purpose, 'model': settings['model'], 'attempt': attempt,
+               'valid': not errors, 'errors': errors[:3]})
         if not errors:
             return {'answer': answer, 'calls': _calls_this_run[0] - calls_before, 'repaired': attempt > 1}
         messages = messages + [
@@ -296,6 +331,15 @@ def call_llm(purpose, system, user, schema, extra_check=None, max_tokens=4000,
             {'role': 'user', 'content': 'Your answer was rejected by the validator:\n- ' + '\n- '.join(errors[:10]) +
                                         '\nSend the corrected JSON object only.'}]
     raise LLMError('answer still invalid after a repair try: ' + '; '.join(errors[:5]))
+
+
+def _hook(info):
+    """Pass an event to EVENT_HOOK if one is set; never let it break a call."""
+    if EVENT_HOOK:
+        try:
+            EVENT_HOOK(info)
+        except Exception:
+            pass
 
 
 def calls_this_run():

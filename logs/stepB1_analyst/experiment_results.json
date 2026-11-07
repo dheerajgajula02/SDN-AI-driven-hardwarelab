@@ -1,0 +1,1065 @@
+[
+ {
+  "scenario": "clean_1",
+  "combo": "v1_plain/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches (arista1, arista2, cisco1, hp1, ovs1, ovs2) are connected with no unknown or missing datapaths. All links are up; the arista1:4-arista2:4 link is intentionally standby with zero traffic and no learned rules, which is expected. No port errors or drops on any interface, and packet rates are low and symmetric across all ports. Flow tables contain only expected learned rules plus standard controller rules (DHCP/DNS intercept, table-miss, TCP sensor); no unauthorized or drop rules. The only new TCP connection in the last 60s is pc2 to srv1 on port 80 (1 connection, 1 destination), consistent with normal web access rather than scanning. No anomalies detected."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000697,
+  "seconds": 42.4
+ },
+ {
+  "scenario": "clean_1",
+  "combo": "v1_plain/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "No abnormal conditions detected. All six switches are connected; all links are up. The arista1:4-arista2:4 link is standby with zero traffic, as expected. Port counters show zero errors and zero dropped packets on all ports, with low packet rates consistent across links. Learned flow rules match expected VLAN10/VLAN20 paths, and there are no unauthorized or drop rules. The only new TCP connection in the last 60s is pc2 to srv1:80 (1 connection, 1 destination host, 1 destination port), which is not indicative of scanning or flooding."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.002953,
+  "seconds": 50.0
+ },
+ {
+  "scenario": "clean_1",
+  "combo": "v2_context/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches are connected and no unknown datapaths are present. Every link, including the standby arista1:4-arista2:4 redundant link, is up; the standby correctly carries no traffic (0 pps) while main links carry the light lab load. All ports show zero errors and zero drops, and no drop rules exist. Rule ownership is entirely from expected applications (table_miss, learned, dns_intercept, dhcp_intercept, tcp_sensor, tcp_sensor_connection); there are no unauthorized rules. Traffic rates are low (a few pps per port, many idle), consistent with normal lab traffic. The tcp_sensor shows only one new TCP connection in the last 60 s (pc2 to srv1:80), which is normal user traffic, not a scan or flood. No abnormalities detected."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000771,
+  "seconds": 8.3
+ },
+ {
+  "scenario": "clean_1",
+  "combo": "v2_context/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches are connected, all links are up including the standby arista1:4-arista2:4 redundant link, and no unknown DPIDs are present. Port counters show no errors or drops, and traffic rates are low and consistent with normal lab activity. Switch tables contain only expected rule owners (table_miss, learned, dns_intercept, dhcp_intercept, tcp_sensor, tcp_sensor_connection); there are no unauthorized rules and no drop rules. The tcp_sensor shows one normal TCP connection from pc2 to srv1:80 in the last 60 seconds, not a scan or flood. No abnormal conditions were found."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.001642,
+  "seconds": 28.2
+ },
+ {
+  "scenario": "clean_1",
+  "combo": "v3_checklist/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checks pass. All six switches (arista1, arista2, cisco1, hp1, ovs1, ovs2) are connected with no missing or unknown DPIDs. All links are up, including the standby link arista1:4-arista2:4, which is up and idle (0.0 pps), so redundancy is intact and no main link has failed. No rule has owner 'unauthorized' and no drop rules exist; rule owners are only table_miss, learned, dns_intercept, dhcp_intercept, tcp_sensor and tcp_sensor_connection. Traffic is light: the busiest port is cisco1:1 (r1) at 7.4 pps and the busiest learned rule is 3.6 pps (pc1/srv1), far below 100 pps. tcp_sensor shows only pc2 with 1 connection to 1 host (srv1) on 1 port (80), well under the scan thresholds. No port has errors, rx_dropped or tx_dropped, and all samples are valid."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000851,
+  "seconds": 6.5
+ },
+ {
+  "scenario": "clean_1",
+  "combo": "v3_checklist/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checklist items pass: all 6 switches are connected with no missing or unknown DPIDs; all links are up, including the idle standby link arista1:4-arista2:4; no unauthorized or drop rules are present; port and learned-rule rates are low (max observed 7.4 pps on cisco1 port 1); tcp_sensor shows only pc2 with 1 new connection to 1 host and 1 distinct destination port; and all ports report zero errors and zero dropped packets with valid samples."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000908,
+  "seconds": 10.3
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v1_plain/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [
+    {
+     "category": "other",
+     "severity": "info",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "pc2 port 2 rx_pps=0.0, tx_pps=0.0; learned rules for pc2->r1 and r1->pc2 show 0.0 pps; only 2 new TCP connections to srv1:80 in last 60s.",
+     "explanation": "pc2 is essentially idle: its access port carries no measurable traffic and its forwarding rules have zero hit rate, while the only activity is two new TCP connections to srv1 port 80. This is not a fault (link up, no errors/drops, switch connected) but it is a notable deviation from the other hosts, which all show steady 2-5 pps. Could indicate a host that is powered off/idle, or a host that only occasionally polls a web service.",
+     "recommended_action": "Confirm pc2 is intentionally idle; if it should be active, check host NIC/link and whether its traffic is being blackholed by the table-miss rule. No immediate action required."
+    },
+    {
+     "category": "other",
+     "severity": "info",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Standby link arista1:4-arista2:4 is up with 0 learned rules and 0.0 pps on both ends; all other links carry traffic.",
+     "explanation": "The inter-arista standby link is up but unused, which is expected for a standby path. No errors or drops are reported, so this is informational only.",
+     "recommended_action": "No action; keep as standby. Verify STP/loop-prevention intent if the link is meant to be active."
+    }
+   ],
+   "summary": "All six switches are connected, all links are up, and no port errors or drops are reported. Traffic rates are low and consistent across hosts (2-5 pps), with VLAN 10/20 tagging and forwarding rules present on every switch. The only anomalies are informational: pc2 is idle (0 pps, 0-hit rules, only 2 new TCP connections to srv1:80 in 60s) and the arista1-arista2 standby link is up but unused. No link failures, unauthorized flows, drop rules, floods, port scans, or disconnected switches were detected; network health is healthy."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000813,
+  "seconds": 25.8
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v1_plain/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches are connected; all links are up, with arista1:4-arista2:4 correctly standby and carrying no traffic. Port counters show no errors or drops. Learned flow entries are consistent with expected VLAN 10/20 forwarding and routing. The only TCP sensor activity is pc2 making two normal HTTP connections to srv1:80 over the last 60 seconds, with no scan or flood signature."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.001503,
+  "seconds": 24.5
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v2_context/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches are connected to the controller with no unknown datapaths. Every link, including the arista1:4-arista2:4 standby, is up; the standby correctly carries no traffic (0 pps) while main links carry the light lab load. All ports show zero errors and zero drops, and per-port rates are in the expected few-pps range with many ports idle. Switch tables contain only expected owners (table_miss, learned, dns_intercept, dhcp_intercept, tcp_sensor, tcp_sensor_connection); there are no unauthorized rules and no drop rules. The tcp_sensor shows only pc2 making 2 new connections to srv1:80 in the last 60 s, which is normal light web traffic, not a scan or flood. No abnormalities detected."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000766,
+  "seconds": 44.2
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v2_context/low",
+  "calls": 2,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All six switches are connected and no unknown dataplanes are present. All links are up, including the arista1:4-arista2:4 standby link, which correctly carries no traffic. No unauthorized flows or drop rules exist; all observed flow owners are expected (table_miss, learned, dns_intercept, dhcp_intercept, tcp_sensor, and tcp_sensor_connection). All ports have zero errors and zero drops, and traffic rates are light (maximum observed ~7.1 pps), with many idle ports. The only TCP sensor activity is pc2 making two connections to srv1 port 80 in the last 60s, which is consistent with normal light web traffic and not a scan or flood."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.001888,
+  "seconds": 131.5
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v3_checklist/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checks pass. All 6 switches (arista1, arista2, cisco1, hp1, ovs1, ovs2) are connected with no missing or unknown DPIDs. All links are up, including the standby link arista1:4-arista2:4, which is up and idle (0.0 pps, 0 learned rules) as expected for redundancy. No unauthorized-owner rules and no drop rules exist on any switch. Traffic is light everywhere: the busiest port is cisco1:1 (r1) at 7.1 pps and the busiest learned rule is ~4.4 pps (pc1 on arista1), far below the 100 pps threshold. tcp_sensor shows only pc2 with 2 new connections to 1 host (srv1) on 1 distinct port (80), well under the scan thresholds. No ports report dropped packets, errors, or invalid samples."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.00083,
+  "seconds": 10.7
+ },
+ {
+  "scenario": "clean_2",
+  "combo": "v3_checklist/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 7527,
+  "report": {
+   "network_health": "healthy",
+   "findings": [],
+   "summary": "All checks passed: all 6 switches are connected with no missing or unknown DPIDs; all links are up, including the idle standby link arista1:4-arista2:4, so redundancy is intact; all rules have authorized owners and there are no drop rules; traffic rates are light with no port or learned rule above 100 pps; tcp_sensor shows only pc2 with 2 new connections to 1 host and 1 destination port; and all ports report 0 errors, 0 drops, and valid samples."
+  },
+  "score": {
+   "found": 0,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {}
+  },
+  "cost": 0.000868,
+  "seconds": 13.9
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v1_plain/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps 82692.5 / tx_pps 82692.7; arista2 port 1 (to cisco1) 82695.2 pps; cisco1 port 1 (r1) 164654.1 pps; hp1 port 2 (srv1) 82227.5 pps. Learned rule 'in 2: pc2 -> r1' matches at 103318.5 pps and 'in 1: r1 -> pc2' at 103318.3 pps, versus ~2-5 pps baseline on other hosts.",
+     "explanation": "pc2 is generating a sustained ~82k pps bidirectional traffic stream toward r1/srv1, roughly four orders of magnitude above the normal 2-5 pps seen from pc1, vm1 and vm2. The same volume is reflected back to pc2, so this is a high-rate loop or a flooding/reflection condition rather than a one-way bulk transfer. It saturates the cisco1 uplink (164k pps aggregate) and the hp1-srv1 path, and will cause packet loss and control-plane pressure on every switch along the path.",
+     "recommended_action": "Identify the process on pc2 (10.10.10.12) generating the traffic; check for a broadcast/multicast storm or a misconfigured application. Apply a rate-limit or temporary drop on arista2 port 2, and verify STP/loop protection on the arista1-arista2 standby link is not flapping traffic into the active path."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 made 300 new connections to srv1 across 300 distinct destination ports (example ports 1-10), all within 60 seconds. Normal host pc2 made 2 connections to a single port (80).",
+     "explanation": "vm1 (10.10.20.31) is opening one connection per port across a wide port range on srv1, which is the classic signature of a TCP port scan or worm-like propagation. 300 distinct ports in 60s from a single VM is not legitimate application behavior and indicates either a compromised VM or an unauthorized scanning tool.",
+     "recommended_action": "Isolate vm1 at ovs1 port 2 (or apply a drop rule for vm1 -> srv1 on non-service ports), capture traffic for forensics, and check the VM image for compromise. Confirm with the VM owner whether a scan was authorized; if not, treat as a security incident."
+    },
+    {
+     "category": "unauthorized_flow",
+     "severity": "warning",
+     "device": "hp1",
+     "port": 2,
+     "evidence": "hp1 other_rules contains cookie 153, owner 'unauthorized', priority 30: 'IP pc1 -> srv1 {dl_type 2048} => DROP', 42 packets, 3.2 pps, no hard timeout.",
+     "explanation": "A drop rule not installed by the controller's normal learning path is blocking all IPv4 traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). It is actively matching traffic (3.2 pps), so pc1's access to srv1 is broken. The rule has no hard timeout, so it will persist indefinitely and is not visible in the normal learned-rule set.",
+     "recommended_action": "Verify whether this drop was intentionally provisioned (e.g. a security policy). If not, remove cookie 153 from hp1 and audit how it was inserted (controller credentials, out-of-band access). If intentional, document it and add an expiry."
+    },
+    {
+     "category": "link_failure",
+     "severity": "info",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Link arista1:4-arista2:4 is standby=true, state=down, reason 'arista1 port 4 down, arista2 port 4 down'; 0 learned rules use it. All other links are up.",
+     "explanation": "The redundant arista1-arista2 interconnect is down on both ends. Because it is a standby link with no learned flows, there is no current forwarding impact, but redundancy between the two Arista switches is lost: a failure of cisco1 or the arista1/arista2 uplinks would now partition the topology.",
+     "recommended_action": "Check cabling and optics on arista1 port 4 and arista2 port 4, and confirm the ports are not administratively shut. Restore the standby link to regain redundancy."
+    }
+   ],
+   "summary": "Network is critical. Two serious conditions dominate: (1) pc2 on arista2 port 2 is driving a ~82k pps bidirectional flood toward r1/srv1, four orders of magnitude above baseline, saturating the cisco1 uplink (164k pps) and the hp1-srv1 path; (2) vm1 on ovs1 is port-scanning srv1 with 300 new connections across 300 distinct ports in 60s, a likely compromise. Additionally, an unauthorized, non-expiring drop rule (cookie 153) on hp1 is blocking pc1->srv1 IPv4 traffic at 3.2 pps. The arista1-arista2 standby link is down on both ends, removing redundancy but not currently affecting forwarding. All six switches are connected and no port errors or drops are reported. Recommended immediate actions: rate-limit/isolate pc2, isolate vm1, and review/remove the unauthorized hp1 rule; then restore the standby link."
+  },
+  "score": {
+   "found": 3,
+   "downplayed": 1,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "downplayed",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.001336,
+  "seconds": 25.7
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v1_plain/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "cisco1",
+     "port": 1,
+     "evidence": "cisco1:1 (uplink to r1) shows rx_pps=164654.1 and tx_pps=164654.1 vs baseline ~2 pps. Aggregate matches cisco1:3 ~82,328 pps and cisco1:4 ~82,326 pps. arista2:2 (pc2) ~82,692 pps with learned rule pc2->r1 ~103,318 pps; hp1:2 (srv1) ~82,227 pps with srv1->r1 ~82,357 pps.",
+     "explanation": "Sustained bidirectional flood between pc2 and srv1 through router r1 is saturating cisco1's uplink and both access paths. At ~100k pps per host this is far above normal traffic and can starve legitimate traffic; possible DoS, loop, or misbehaving host/NIC.",
+     "recommended_action": "Immediately rate-limit or isolate pc2 (arista2 port 2) and srv1 (hp1 port 2), capture traffic to identify the flow, and check r1 for loop/routing issues; apply temporary ACLs/QoS to protect the uplink."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "vm1",
+     "port": null,
+     "evidence": "tcp_sensor_last_60s: vm1 generated 300 new TCP connections in 60s to srv1 across 300 distinct destination ports (examples 1-10); distinct_dst_hosts=1, distinct_dst_ports=300.",
+     "explanation": "vm1 is performing a vertical port scan of srv1, consistent with reconnaissance or worm activity. This is not normal application behavior and may precede exploitation.",
+     "recommended_action": "Isolate vm1 at ovs1 port 2, block its traffic to srv1, inspect the VM for compromise, and review controller logs for other scans."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "warning",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 flow table contains unauthorized rule cookie 153: 'IP pc1 -> srv1 {dl_type:2048} => DROP', owner=unauthorized, drop=true, priority=30, packets=42, pps=3.2.",
+     "explanation": "An unauthorized drop rule is blocking legitimate IP traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). It was not installed by the normal controller/learning path and may be malicious, stale, or a policy misconfiguration.",
+     "recommended_action": "Remove cookie 153 from hp1 after confirming policy, audit controller/switch access for unauthorized flow insertion, and verify pc1-to-srv1 connectivity."
+    },
+    {
+     "category": "link_failure",
+     "severity": "info",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "arista1:4-arista2:4 is standby=true and state=down; both arista1 port 4 and arista2 port 4 are down; learned_rules_using_it=0.",
+     "explanation": "The redundant inter-switch link is down. Because it is marked standby and carries no learned flows, current forwarding is likely unaffected, but redundancy is reduced.",
+     "recommended_action": "Verify cabling/optics and port configuration on arista1:4 and arista2:4; bring the standby link up if redundancy is required."
+    }
+   ],
+   "summary": "Network is critical: a sustained ~82-165k pps flood on pc2/srv1 paths and cisco1 uplink to r1, a vm1 port scan of srv1 (300 ports in 60s), and an unauthorized hp1 drop rule blocking pc1->srv1. The arista1-arista2 standby link being down is informational but reduces redundancy. Prioritize isolating pc2, srv1, and vm1 and removing the unauthorized drop rule."
+  },
+  "score": {
+   "found": 3,
+   "downplayed": 1,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "downplayed",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.004714,
+  "seconds": 79.5
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v2_context/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps 82692.5 / tx_pps 82692.7; arista2:1 (to cisco1) ~82695 pps; cisco1:1 (r1) 164654 pps; cisco1:3/4 and hp1:1/2 ~82k pps. Learned rules pc2->r1 and r1->pc2 on arista2 show ~103318 pps each. Normal lab baseline is a few pps.",
+     "explanation": "A massive traffic flood is originating from pc2 (10.10.10.12) and propagating through arista2, cisco1, and hp1 toward srv1. The bidirectional ~82k pps on the pc2 access port and the corresponding learned flows indicate a loop or a broadcast/multicast storm (or a compromised host generating line-rate traffic). This saturates the core and access links and will degrade all VLANs.",
+     "recommended_action": "Shut or rate-limit arista2 port 2 to contain the source, capture a packet sample to identify the traffic type (broadcast/multicast/unicast), check pc2 for a loop or malware, and verify STP/loop protection on arista2. Once contained, confirm pps returns to baseline."
+    },
+    {
+     "category": "port_scan",
+     "severity": "warning",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 made 300 new TCP connections to srv1 across 300 distinct destination ports (ports 1-10 shown) in 60 s.",
+     "explanation": "vm1 (10.10.20.31) is opening one TCP connection per destination port on srv1, which is the signature of a port scan (or aggressive service enumeration). This is not normal lab traffic and may indicate a compromised VM or reconnaissance activity.",
+     "recommended_action": "Isolate vm1 or block its traffic to srv1 at ovs1, inspect vm1 for compromise, and review srv1 logs for probing. If authorized testing, whitelist it; otherwise treat as a security incident."
+    },
+    {
+     "category": "unauthorized_flow",
+     "severity": "warning",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 other_rules: cookie 153, owner 'unauthorized', priority 30, rule 'IP pc1 -> srv1 {dl_type:2048} => DROP', packets 42, ~3.2 pps, no hard timeout.",
+     "explanation": "A DROP rule blocking pc1 (10.10.10.11) to srv1 (10.10.20.21) was installed on hp1 by no known application (owner unauthorized). This is not part of the design and is actively dropping legitimate user-to-server traffic.",
+     "recommended_action": "Remove the unauthorized cookie-153 drop rule from hp1, then investigate how it was installed (controller access logs, switch CLI history) to determine if the controller or switch was compromised."
+    },
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Standby link arista1:4-arista2:4 is down: 'arista1 port 4 down, arista2 port 4 down'; 0 learned rules using it.",
+     "explanation": "The redundant standby link between arista1 and arista2 is down. The network still forwards traffic over the main paths, but there is no redundancy left between the two access switches; a failure of a main link would partition part of the topology.",
+     "recommended_action": "Check cabling and optics on arista1 port 4 and arista2 port 4, bring the standby link back up, and verify it stays up with no traffic until needed."
+    }
+   ],
+   "summary": "Network is critical. A ~82k pps flood from pc2 (arista2 port 2) is saturating arista2, cisco1, and hp1 links, far above the few-pps lab baseline. vm1 is port-scanning srv1 (300 connections to 300 ports in 60 s). An unauthorized DROP rule (cookie 153) on hp1 blocks pc1->srv1. The standby arista1:4-arista2:4 link is down, leaving no redundancy. All switches are connected and no other drop rules exist. Contain the pc2 flood first, then isolate vm1, remove the unauthorized rule, and restore the standby link."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.001327,
+  "seconds": 19.9
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v2_context/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port2 rx/tx ~82692 pps; arista2 port1 ~82695 pps; cisco1 port1 ~164654 pps; hp1 ports1/2 ~82230 pps. Learned rules pc2->r1 and r1->pc2 show ~103318 pps; r1->srv1 and srv1->r1 show ~103067/82357 pps.",
+     "explanation": "Normal lab traffic is only a few packets per second per port. These rates are orders of magnitude higher and affect pc2, r1, srv1, cisco1, arista2, and hp1, indicating a traffic storm, loop, or unknown-unicast/broadcast flood rather than normal traffic.",
+     "recommended_action": "Inspect pc2, srv1, and r1 for a loop or misbehaving host/application. Enable/verify storm control on access ports, trace the top talkers, and temporarily isolate the segment if the flood persists."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 has 300 new TCP connections to srv1 and 300 distinct destination ports; example ports are 1 through 10.",
+     "explanation": "A single host opening many TCP connections to one destination across hundreds of distinct ports in 60 seconds is characteristic of a port scan. VM1 may be compromised or running unauthorized scanning software.",
+     "recommended_action": "Quarantine or investigate vm1, review srv1 firewall/IDS logs for scan attempts, and block vm1 if the activity is malicious."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 other_rules: cookie 153, owner unauthorized, priority 30, hard_timeout 0, packets 42, 3.2 pps, rule 'IP pc1 -> srv1 {dl_type:2048} => DROP'.",
+     "explanation": "Drop rules do not exist on a healthy network, and this rule has an unauthorized owner, meaning no approved application installed it. It blocks legitimate traffic from pc1 to srv1.",
+     "recommended_action": "Remove the unauthorized DROP rule from hp1, audit switch/controller access for unauthorized changes, and verify pc1-to-srv1 connectivity afterward."
+    },
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Standby link arista1:4-arista2:4 is down: arista1 port4 down and arista2 port4 down. It has 0 learned rules using it.",
+     "explanation": "The standby redundant link between arista1 and arista2 is normally up but carries no traffic. Both ends being down means the network still forwards but has lost redundancy between these switches.",
+     "recommended_action": "Check cabling, optics/SFPs, and port configuration on arista1:4 and arista2:4, then restore the standby link to regain redundancy."
+    }
+   ],
+   "summary": "Network health is critical. A severe traffic flood is affecting arista2, cisco1, hp1, r1, pc2, and srv1 with tens to hundreds of thousands of packets per second versus the expected few pps. VM1 is performing a TCP port scan against srv1, and hp1 contains an unauthorized DROP rule blocking pc1-to-srv1 traffic. The arista1-arista2 standby redundancy link is also down, leaving no redundancy between those switches. Investigate the flood and malicious VM first, remove the unauthorized drop rule, and restore the standby link."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.002307,
+  "seconds": 70.5
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v3_checklist/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "link arista1:4-arista2:4 standby=true state=down, why=\"arista1 port 4 down, arista2 port 4 down\"; arista1 port 4 rx_pps=0.0 tx_pps=0.0, arista2 port 4 rx_pps=0.0 tx_pps=0.0",
+     "explanation": "The standby (redundant) link between arista1 and arista2 is down on both ends. Traffic still flows over the main links, but the network has lost its redundancy. The standby link is not carrying traffic, so no main link has failed.",
+     "recommended_action": "Restore arista1 port 4 and arista2 port 4 (check cabling/SFP/admin state) to regain redundancy."
+    },
+    {
+     "category": "unauthorized_flow",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "cookie=153 owner=unauthorized priority=30 match=\"IP pc1 -> srv1 {\\\"dl_type\\\": 2048}\" => DROP, packets=42, pps=3.2",
+     "explanation": "An unauthorized drop rule on hp1 blocks all IPv4 traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). It has already dropped 42 packets, so pc1-to-srv1 traffic is being lost.",
+     "recommended_action": "Remove the unauthorized cookie-153 drop rule from hp1 and investigate how it was installed."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "cookie=153 owner=unauthorized priority=30 match=\"IP pc1 -> srv1 {\\\"dl_type\\\": 2048}\" => DROP, packets=42, pps=3.2",
+     "explanation": "A drop rule exists on hp1 (drop rules should not exist on a healthy network). It discards IPv4 traffic from pc1 to srv1 and has a packet count of 42.",
+     "recommended_action": "Delete the drop rule and verify pc1 can reach srv1 again."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps=82692.5 tx_pps=82692.7; arista2 port 1 rx_pps=82695.2 tx_pps=82695.2; learned rule \"in 2: pc2 -> r1 ... (103318.5 pps)\" and \"in 1: r1 -> pc2 ... (103318.3 pps)\"; cisco1 port 1 (r1) rx_pps=164654.1 tx_pps=164654.1",
+     "explanation": "Traffic from pc2 (10.10.10.12) is far above normal (over 100 pps): the busiest learned rule is pc2 -> r1 at 103318.5 pps, and arista2 port 2 shows ~82692 pps. This flood propagates through cisco1 to r1 and to hp1/srv1, saturating the network.",
+     "recommended_action": "Identify and stop the source of the flood on pc2 (malware/loop/misconfiguration), and rate-limit or quarantine pc2's port until resolved."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s vm1: new_connections=300, distinct_dst_ports=300, distinct_dst_hosts=1, dst_hosts=[\"srv1\"], example_ports=[1,2,3,4,5,6,7,8,9,10]",
+     "explanation": "vm1 (10.10.20.31) opened 300 new TCP connections to 300 distinct destination ports on srv1 in the last 60 s, which is a port scan (threshold is more than 20 distinct ports).",
+     "recommended_action": "Investigate vm1 for compromise, block its scanning traffic, and check srv1 for exposure."
+    }
+   ],
+   "summary": "The lab is in a critical state. The standby link arista1:4-arista2:4 is down (lost redundancy, warning). hp1 carries an unauthorized drop rule (cookie 153, priority 30, match IP pc1 -> srv1, 42 packets) that is discarding pc1-to-srv1 traffic. A massive traffic flood originates from pc2: the busiest learned rule pc2 -> r1 runs at 103318.5 pps and arista2 port 2 at ~82692 pps, saturating cisco1/r1/hp1. vm1 is port-scanning srv1 with 300 connections to 300 distinct ports in 60 s. All switches are connected, no unknown DPIDs, and no port errors or invalid samples were found."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.001513,
+  "seconds": 16.2
+ },
+ {
+  "scenario": "planted_1",
+  "combo": "v3_checklist/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8757,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Link arista1:4-arista2:4 (standby=true) state=\"down\", why=\"arista1 port 4 down, arista2 port 4 down\"; learned_rules_using_it=0; arista1 port 4 rx_pps=0.0 tx_pps=0.0; arista2 port 4 rx_pps=0.0 tx_pps=0.0",
+     "explanation": "The standby (redundant) link between arista1 port 4 and arista2 port 4 is down, so the network has lost its redundancy. Its counters are 0 pps and 0 learned rules, so it is not carrying traffic and no main link has failed; traffic still flows over the primary links.",
+     "recommended_action": "Check cabling/optics on arista1 port 4 and arista2 port 4 and bring the standby link back up to restore redundancy."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "cookie 153, owner \"unauthorized\", priority 30, drop=true, match \"IP pc1 -> srv1 {\\\"dl_type\\\": 2048} => DROP\", packets 42, pps 3.2",
+     "explanation": "An unauthorized drop rule on hp1 silently discards traffic from pc1 (10.10.10.11, VLAN 10) to srv1 (10.10.20.21, VLAN 20). 42 packets have already been dropped, so traffic is being lost. No application of ours installed this rule.",
+     "recommended_action": "Delete the cookie-153 drop rule from hp1 and audit how it was installed (controller/switch access)."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps=82692.5, tx_pps=82692.7; arista2 port 1 (cisco1) rx_pps=82695.2 tx_pps=82695.2; cisco1 port 1 (r1) rx_pps=164654.1 tx_pps=164654.1; busiest learned rule \"in 2: pc2 -> r1 ... (103318.5 pps)\"; also cisco1 \"in 1: r1 -> srv1 (103071.0 pps)\" and hp1 \"in 2: srv1 -> r1 (82357.4 pps)\"",
+     "explanation": "Traffic is orders of magnitude above the normal few pps per port. The busiest learned rule is sourced from pc2 (10.10.10.12) toward r1 at ~103,318 pps, and the flood also saturates the r1, srv1 and pc2 paths.",
+     "recommended_action": "Contain and investigate pc2 (10.10.10.12): check for a loop/misbehaving application, apply rate limiting or shut the port, and clean up the affected learned flows."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor vm1: new_connections=300, distinct_dst_ports=300 (>20), distinct_dst_hosts=1 (srv1), example_ports [1,2,3,4,5,6,7,8,9,10]",
+     "explanation": "vm1 (10.10.20.31, on ovs1 port 2) opened 300 new TCP connections in 60 s across 300 distinct destination ports on srv1, which is a clear port scan and an attack in progress.",
+     "recommended_action": "Isolate vm1 (block/quarantine its port) and investigate the compromised host; review srv1 logs for follow-up access."
+    }
+   ],
+   "summary": "Checks 1 and 6 pass: all six switches are connected with no missing or unknown DPIDs, and no ports show drops, errors or invalid samples. Failures: (2) standby link arista1:4-arista2:4 is down (lost redundancy, warning; not carrying traffic, so no main link has failed); (3) hp1 carries an unauthorized drop rule (cookie 153, priority 30, IP pc1->srv1, 42 packets) that is losing traffic (critical); (4) a massive flood sourced from pc2 (~103,318 pps busiest learned rule on arista2, port 2 at ~82,692 pps rx, r1 port at ~164,654 pps); (5) vm1 on ovs1 port 2 scanned srv1 across 300 distinct ports. Network is critical due to the attack and traffic loss."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.002799,
+  "seconds": 45.9
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v1_plain/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx/tx ~84,934 pps; arista2 port 1 (cisco1:3) ~84,937 pps; cisco1 port 1 (r1) ~169,593 pps; cisco1 ports 3/4 and hp1 ports 1/2 all ~84,600-84,800 pps. Learned rules on arista2/cisco1/hp1 show pc2<->r1 and srv1<->r1 flows at ~102,480 pps each.",
+     "explanation": "A massive bidirectional traffic flood is saturating the path pc2 -> arista2 -> cisco1 -> r1 and r1 -> srv1 via cisco1/hp1. Port rates jumped from a few pps to ~85k pps per port (r1 aggregate ~170k pps), and the corresponding learned flow entries report ~102k pps. This is far above normal host traffic and indicates a loop, a broadcast/multicast storm, or a misbehaving host/application generating line-rate traffic. It will degrade or drop legitimate traffic across the whole fabric.",
+     "recommended_action": "Identify the source on pc2 (and any traffic from r1 to srv1) with sFlow/port mirroring; check for a loop or duplicate MAC/broadcast storm; apply rate limiting or a temporary drop rule on arista2 port 2 and cisco1 port 1; verify r1 routing/forwarding is not looping traffic back into the fabric."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 made 300 new connections to srv1 across 300 distinct destination ports (example ports 1-10), all within 60s.",
+     "explanation": "vm1 (10.10.20.31) is opening connections to 300 different TCP ports on srv1 in one minute, which is the classic signature of a port scan (or worm/exploit enumeration). This is unauthorized reconnaissance against srv1 and may precede an attack.",
+     "recommended_action": "Isolate or quarantine vm1 (e.g., drop rule on ovs1 port 2), inspect vm1 for compromise/malware, review srv1 logs for follow-on exploitation, and confirm whether the scan was authorized vulnerability scanning."
+    },
+    {
+     "category": "unauthorized_flow",
+     "severity": "warning",
+     "device": "hp1",
+     "port": 1,
+     "evidence": "hp1 other_rules: cookie 153, owner 'unauthorized', priority 30, rule 'IP pc1 -> srv1 {dl_type 2048} => DROP', packets 38, ~3.9 pps, no hard timeout.",
+     "explanation": "A drop rule not installed by the controller's normal learning/DHCP/DNS/TCP-sensor owners is blocking all IPv4 traffic from pc1 to srv1. It is actively matching traffic (~3.9 pps, 38 packets), so pc1 cannot reach srv1. This could be a stale or manually inserted policy rule, or an unauthorized/rogue flow that should be reviewed.",
+     "recommended_action": "Verify whether blocking pc1->srv1 is intended policy; if not, remove cookie 153 from hp1. If intended, document it and add an explicit hard timeout/owner so it is managed rather than orphaned."
+    },
+    {
+     "category": "link_failure",
+     "severity": "info",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Link arista1:4-arista2:4 is standby=true, state=down, why='arista1 port 4 down, arista2 port 4 down'; 0 learned rules use it.",
+     "explanation": "The redundant inter-switch link between arista1 and arista2 is down on both ends. It is a standby link with no learned flows, so there is no current traffic impact, but redundancy between the two Arista switches is lost.",
+     "recommended_action": "Confirm the link is intentionally standby; if not, investigate the physical/optics/cabling on arista1 port 4 and arista2 port 4 and restore it to regain redundancy."
+    }
+   ],
+   "summary": "Network is critical. A severe traffic flood (~85k pps per port, ~170k pps on cisco1 uplink to r1) is saturating the pc2/arista2/cisco1/r1/srv1 path, likely a loop or misbehaving host. Simultaneously vm1 is port-scanning srv1 (300 ports in 60s). An unauthorized drop rule on hp1 blocks pc1->srv1 IPv4 traffic. The standby arista1-arista2 link is down (no traffic impact, redundancy lost). All switches are connected and no port errors/drops are reported, but the flood and scan require immediate action."
+  },
+  "score": {
+   "found": 3,
+   "downplayed": 1,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "downplayed",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.001237,
+  "seconds": 20.3
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v1_plain/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "Port arista2:2 (pc2) rx/tx \u224884,934 pps; arista2:1 \u224884,937 pps; cisco1:1 (r1) \u2248169,593 pps; cisco1:3/4 \u224884,797 pps; hp1:2 (srv1) \u224884,644 pps. Learned rules show pc2\u2194r1 and r1\u2194srv1 at \u2248102,480 pps.",
+     "explanation": "Sustained ~85k pps on a host-facing port and symmetric high rates across cisco1, hp1 and arista2 indicate a traffic flood/storm or DoS, consuming forwarding capacity and likely degrading all VLANs. Matching learned flows at ~102k pps confirm abnormal volume, not baseline traffic.",
+     "recommended_action": "Isolate or rate-limit pc2/arista2:2, identify top talkers/flows, check r1 and srv1 for compromise or loops, and verify STP/broadcast suppression."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "vm1",
+     "port": null,
+     "evidence": "tcp_sensor_last_60s: vm1 made 300 new TCP connections to srv1 across 300 distinct destination ports in 60s; example ports 1-10; only one destination host.",
+     "explanation": "Many new TCP connections from vm1 to srv1 across hundreds of distinct ports is characteristic of a TCP port scan. This may be reconnaissance, a worm, or unauthorized scanning and can trigger IDS alerts or consume server resources.",
+     "recommended_action": "Isolate vm1 or apply an ACL/IPS block; inspect vm1 for compromise; verify whether this scanning is authorized; notify security team."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "warning",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 other_rules: cookie 153, owner \"unauthorized\", priority 30, drop=true: IP pc1 -> srv1 {dl_type 2048} => DROP; 38 packets, 3.9 pps.",
+     "explanation": "An explicit unauthorized drop rule on hp1 is actively discarding pc1\u2192srv1 traffic at ~3.9 pps. If this policy is not intended, pc1 cannot reach srv1; if intended, it should be documented and monitored.",
+     "recommended_action": "Confirm whether pc1\u2192srv1 should be blocked; remove/disable cookie 153 if unintended; otherwise document the policy and monitor hit counters."
+    },
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Link arista1:4-arista2:4 state=down, standby=true, learned_rules_using_it=0; both arista1:4 and arista2:4 are down; why: arista1 port 4 down, arista2 port 4 down.",
+     "explanation": "The redundant inter-switch link between arista1 and arista2 is down, leaving no standby path on that segment. Traffic still has alternate paths via cisco1, but redundancy is reduced; if cisco1 fails, connectivity between arista1 and arista2 may be impacted.",
+     "recommended_action": "Check cabling/SFP and port configuration on arista1:4 and arista2:4; restore the link or confirm decommissioning; update monitoring for redundancy state."
+    }
+   ],
+   "summary": "Network is critical. A severe traffic flood is underway: arista2:2 (pc2) and related ports on cisco1/hp1 carry ~85k pps, while learned flows show pc2\u2194r1 and r1\u2194srv1 at ~102k pps. Separately, vm1 performed a 300-port TCP scan against srv1 in 60s. An unauthorized drop rule on hp1 is blocking pc1\u2192srv1, and the standby arista1-arista2 link is down, reducing redundancy. No switch disconnects or port errors observed."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.002994,
+  "seconds": 56.8
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v2_context/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps=84934.3, tx_pps=84934.3; arista2 port 1 (uplink to cisco1) rx/tx ~84936 pps; cisco1 port 1 (r1) ~169593 pps; hp1 port 2 (srv1) ~84644 pps. Learned rules on arista2/cisco1/hp1 show ~102480 pps for pc2<->r1 and r1<->srv1 flows.",
+     "explanation": "A massive traffic flood (~85k pps per port, ~100k pps per flow) is saturating the path pc2 -> arista2 -> cisco1 -> r1 -> cisco1 -> hp1 -> srv1. Normal lab traffic is a few pps per port. This is a broadcast/loop or a traffic generator/DoS condition, not normal user traffic.",
+     "recommended_action": "Identify the source on pc2 (or a compromised host) and stop the flood; check for a bridging loop or misconfigured traffic generator; apply rate limiting/ACLs on arista2 port 2 and cisco1 port 1 if needed."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "warning",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 has an unauthorized drop rule: cookie 153, priority 30, 'IP pc1 -> srv1 {dl_type:2048} => DROP', packets=38, pps=3.9, owner=unauthorized.",
+     "explanation": "A drop rule not installed by any of our applications is blocking traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). Drop rules do not exist on a healthy network, and this rule is actively dropping ~3.9 pps. It may be a leftover or malicious rule.",
+     "recommended_action": "Remove the unauthorized drop rule (cookie 153) from hp1 and investigate how it was installed; verify pc1-to-srv1 connectivity afterward."
+    },
+    {
+     "category": "port_scan",
+     "severity": "warning",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s: vm1 made 300 new TCP connections to srv1 across 300 distinct destination ports (example ports 1-10) in the last 60 s.",
+     "explanation": "vm1 is scanning srv1 across 300 distinct ports in 60 seconds, which is a classic port scan pattern and abnormal for normal lab traffic.",
+     "recommended_action": "Investigate vm1 for compromise or a misbehaving scan tool; block or rate-limit outbound scanning from vm1 and review srv1 logs for follow-on activity."
+    },
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Standby link arista1:4-arista2:4 is down: arista1 port 4 down, arista2 port 4 down; learned_rules_using_it=0.",
+     "explanation": "The redundant standby link between arista1 and arista2 is down. The network still works via the main paths, but redundancy is lost; a failure of a main link would now cause an outage.",
+     "recommended_action": "Check cabling and port configuration on arista1:4 and arista2:4 and bring the standby link back up to restore redundancy."
+    }
+   ],
+   "summary": "The lab is in a critical state. A massive traffic flood (~85k-100k pps) is saturating the path pc2 -> arista2 -> cisco1 -> r1 -> cisco1 -> hp1 -> srv1, far above normal lab rates. In addition, hp1 carries an unauthorized drop rule blocking pc1->srv1, vm1 is port-scanning srv1 (300 ports in 60 s), and the standby arista1:4-arista2:4 link is down, leaving no redundancy. All switches are connected and no other port errors were observed."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.00133,
+  "seconds": 46.5
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v2_context/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "Standby link arista1:4-arista2:4 is down: arista1 port 4 and arista2 port 4 both report state down; learned_rules_using_it=0.",
+     "explanation": "The redundant/standby link between arista1 and arista2 is down. The network still forwards over the main links, but redundancy is lost; a main-link failure could disrupt VLAN connectivity or isolate segments.",
+     "recommended_action": "Check cabling/SFP and interface status on arista1:4 and arista2:4, clear any link errors, and restore the standby link. Verify it remains idle after recovery."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "cisco1",
+     "port": 1,
+     "evidence": "Abnormal sustained rates: cisco1:1 to r1 ~169593 pps rx/tx; cisco1:3 ~84797 pps; cisco1:4 ~84795 pps; arista2:1/2 ~84936/84934 pps; hp1:1/2 ~84647/84644 pps. Learned rules show r1<->pc2 and r1<->srv1 at ~102k pps each, versus normal few pps.",
+     "explanation": "A high-rate flood is traversing the core and access ports, involving r1, pc2, and srv1. This is orders of magnitude above normal lab traffic and is consistent with a loop, broadcast storm, or compromised/misconfigured host generating excessive traffic. It can saturate links and switch/controller resources.",
+     "recommended_action": "Isolate or rate-limit pc2 and srv1, inspect top talkers and flow entries, verify STP/loop prevention on cisco1, arista2, and hp1, and check the hosts for compromise or misconfiguration."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "hp1 has an unauthorized DROP rule: cookie 153, owner unauthorized, priority 30, rule IP pc1 -> srv1 {dl_type:2048} => DROP, packets 38, pps 3.9.",
+     "explanation": "An unauthorized DROP rule is installed on hp1 and is actively dropping pc1-to-srv1 IPv4 traffic. Healthy networks should have no drop rules, and an unauthorized owner indicates control-plane tampering or a rogue application/switch access.",
+     "recommended_action": "Remove or quarantine cookie 153 on hp1, audit controller and switch management access, identify how the unauthorized rule was installed, and verify pc1-to-srv1 connectivity after removal."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s.vm1 shows 300 new TCP connections to srv1, 300 distinct destination ports (examples 1-10), and distinct_dst_hosts=1.",
+     "explanation": "vm1 is performing a TCP port scan against srv1: 300 connections to 300 distinct ports in 60 seconds. This is not normal lab traffic and suggests a compromised VM or reconnaissance activity.",
+     "recommended_action": "Quarantine vm1, capture traffic on ovs1 port 2, inspect the VM for malware, and block or rate-limit further scanning while reviewing srv1 exposure."
+    }
+   ],
+   "summary": "Network health is critical. There is a sustained ~85k-170k pps flood on cisco1/arista2/hp1 involving r1, pc2, and srv1; vm1 is port-scanning srv1 (300 ports in 60s); hp1 has an unauthorized DROP rule for pc1-to-srv1; and the standby arista1:4-arista2:4 link is down, leaving no redundancy. No disconnected switches or port errors were observed."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.003571,
+  "seconds": 57.6
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v3_checklist/off",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "arista1:4-arista2:4 standby link state=down, why='arista1 port 4 down, arista2 port 4 down'; arista1 port 4 rx_pps=0.0 tx_pps=0.0, arista2 port 4 rx_pps=0.0 tx_pps=0.0",
+     "explanation": "The standby (redundant) link between arista1 and arista2 is down, so the network has lost redundancy. It is not carrying traffic (0 pps), so no main link has failed; traffic still flows but a main link failure would now be unprotected.",
+     "recommended_action": "Restore arista1 port 4 and arista2 port 4 (check cabling/SFP/admin state) to regain standby redundancy."
+    },
+    {
+     "category": "unauthorized_flow",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "cookie 153, owner 'unauthorized', priority 30, match 'IP pc1 -> srv1 {\"dl_type\": 2048}', packets 38, pps 3.9, drop=true",
+     "explanation": "An unauthorized drop rule on hp1 blocks all IP traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). It has already dropped 38 packets, so traffic is being lost and no application of ours installed it.",
+     "recommended_action": "Remove the unauthorized cookie-153 rule from hp1 and investigate how it was installed."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "priority 30, match 'IP pc1 -> srv1 {\"dl_type\": 2048}' => DROP, packets 38, pps 3.9, owner unauthorized",
+     "explanation": "A drop rule exists on a supposedly healthy network, dropping pc1-to-srv1 IP traffic. This is the same unauthorized rule and is causing packet loss.",
+     "recommended_action": "Delete the drop rule and verify pc1 can reach srv1 again."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "arista2",
+     "port": 2,
+     "evidence": "arista2 port 2 (pc2) rx_pps=84934.3 tx_pps=84934.3; port 1 (cisco1:3) rx_pps=84936.7 tx_pps=84936.5; learned rule 'in 2: pc2 -> r1' 102480.9 pps and 'in 1: r1 -> pc2' 102481.1 pps",
+     "explanation": "Traffic from pc2 (10.10.10.12) is far above normal (tens of thousands of pps vs a few pps). The busiest learned rule is sourced from pc2, indicating a flood/loop or attack originating at pc2.",
+     "recommended_action": "Investigate pc2 for a traffic flood or loop; apply rate limiting or isolate pc2 until the source is identified."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "cisco1",
+     "port": 1,
+     "evidence": "cisco1 port 1 (r1) rx_pps=169593.2 tx_pps=169593.2; port 3 (arista2:1) rx_pps=84797.0 tx_pps=84797.2; port 4 (hp1:1) rx_pps=84795.0 tx_pps=84798.2; learned rules 'r1 -> srv1' 102483.8 pps, 'r1 -> pc2' 102480.6 pps, 'pc2 -> r1' 102480.6 pps, 'srv1 -> r1' 102480.1 pps",
+     "explanation": "The core switch is carrying ~170k pps on the r1 uplink and ~85k pps on the arista2 and hp1 links, far above the normal few pps. This is the same flood propagating through the core.",
+     "recommended_action": "Trace and contain the flood at its source (pc2) and verify no forwarding loop exists in the core."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "hp1",
+     "port": 2,
+     "evidence": "hp1 port 2 (srv1) rx_pps=84643.9 tx_pps=84643.9; port 1 (cisco1:4) rx_pps=84646.8 tx_pps=84643.4; learned rules 'srv1 -> r1' 102732.7 pps and 'r1 -> srv1' 102731.7 pps",
+     "explanation": "srv1's port is receiving and transmitting ~85k pps, far above normal, as the flood reaches the server VLAN.",
+     "recommended_action": "Rate-limit or isolate srv1 traffic until the flood source is contained."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor vm1: distinct_dst_ports=300, distinct_dst_hosts=1, new_connections=300, example_ports [1..10], dst_hosts ['srv1']",
+     "explanation": "vm1 (10.10.20.31) opened 300 new TCP connections to 300 distinct ports on srv1 in the last 60 s, far exceeding the 20-port threshold. This is a port scan/attack.",
+     "recommended_action": "Isolate vm1 and investigate the scanning process; block its traffic to srv1 if malicious."
+    }
+   ],
+   "summary": "Network is critical. The standby link arista1:4-arista2:4 is down (lost redundancy, warning). An unauthorized drop rule on hp1 (cookie 153, priority 30, match IP pc1->srv1, 38 packets) is dropping pc1-to-srv1 traffic. A massive traffic flood (~85k-170k pps) is propagating from pc2 through arista2, cisco1 and hp1, far above the normal few pps. vm1 on ovs1 is port-scanning srv1 with 300 connections to 300 distinct ports in 60 s. All switches are connected and no port errors or invalid samples were found."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.001712,
+  "seconds": 18.4
+ },
+ {
+  "scenario": "planted_2",
+  "combo": "v3_checklist/low",
+  "calls": 1,
+  "repaired": false,
+  "evidence_chars": 8759,
+  "report": {
+   "network_health": "critical",
+   "findings": [
+    {
+     "category": "link_failure",
+     "severity": "warning",
+     "device": "arista1",
+     "port": 4,
+     "evidence": "link arista1:4-arista2:4 standby=true state=down why='arista1 port 4 down, arista2 port 4 down'; learned_rules_using_it=0; arista1:4 rx_pps=0.0 tx_pps=0.0; arista2:4 rx_pps=0.0 tx_pps=0.0",
+     "explanation": "The standby/redundant link between arista1 port 4 and arista2 port 4 is down. The network still works because main links are up, but redundancy is lost. The standby link is not carrying traffic (down, 0 learned rules).",
+     "recommended_action": "Restore arista1 port 4 and arista2 port 4 / the standby link to regain redundancy."
+    },
+    {
+     "category": "drop_rule",
+     "severity": "critical",
+     "device": "hp1",
+     "port": null,
+     "evidence": "other_rules: cookie=153 owner=unauthorized drop=true priority=30 match='IP pc1 -> srv1 {\"dl_type\": 2048} => DROP' packets=38 pps=3.9",
+     "explanation": "An unauthorized drop rule on hp1 drops traffic from pc1 (10.10.10.11) to srv1 (10.10.20.21). This causes traffic loss; the rule has matched 38 packets at 3.9 pps.",
+     "recommended_action": "Remove the unauthorized drop rule (cookie 153) from hp1 and audit how it was installed."
+    },
+    {
+     "category": "traffic_flood",
+     "severity": "critical",
+     "device": "hp1",
+     "port": 2,
+     "evidence": "busiest learned rule: in 2: srv1 -> r1 {\"dl_vlan\": \"0x0000\"} => PUSH_VLAN:33024, SET_FIELD: {vlan_vid:20}, OUTPUT:1 (102732.7 pps); hp1:2 rx_pps=84643.9 tx_pps=84643.9; cisco1:1 rx_pps=169593.2 tx_pps=169593.2; cisco1:4 rx_pps=84795.0 tx_pps=84798.2",
+     "explanation": "Traffic is far above normal (>100 pps). The busiest learned rule is sourced from srv1 on hp1 port 2 at 102732.7 pps, and multiple uplink ports are around 84k-169k pps, indicating a flood involving the srv1/r1 path.",
+     "recommended_action": "Identify and stop the source of the flood; inspect srv1, r1, and flows on hp1/cisco1; apply rate limiting or containment."
+    },
+    {
+     "category": "port_scan",
+     "severity": "critical",
+     "device": "ovs1",
+     "port": 2,
+     "evidence": "tcp_sensor_last_60s.vm1: distinct_dst_hosts=1 (srv1), distinct_dst_ports=300, new_connections=300, example_ports=[1,2,3,4,5,6,7,8,9,10]",
+     "explanation": "vm1 has initiated 300 new TCP connections to 300 distinct ports on srv1 in the last 60s, exceeding the >20 distinct ports scan threshold. This is a port scan from vm1.",
+     "recommended_action": "Investigate and contain vm1; block scanning traffic and review srv1 exposure."
+    }
+   ],
+   "summary": "Network is critical: standby link arista1:4-arista2:4 is down (lost redundancy), hp1 has an unauthorized drop rule dropping pc1->srv1 traffic, a massive traffic flood is present with the busiest learned rule sourced from srv1 at 102732.7 pps and uplink ports up to 169593.2 pps, and vm1 is scanning srv1 across 300 distinct ports. All switches are connected and no port errors/drops were observed."
+  },
+  "score": {
+   "found": 4,
+   "downplayed": 0,
+   "missed": 0,
+   "false_alarms": [],
+   "per_issue": {
+    "I1": "found",
+    "I2": "found",
+    "I3": "found",
+    "I4": "found"
+   }
+  },
+  "cost": 0.003503,
+  "seconds": 51.9
+ }
+]

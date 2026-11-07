@@ -1,0 +1,39 @@
+PASS  D1 clean_1 (normal traffic): no detector fires
+        []
+PASS  D1 clean_2 (normal traffic): no detector fires
+        []
+PASS  D2 planted: all 4 detectors fire (flood, scan, unauthorized, link)
+        ['link_failure', 'port_scan', 'traffic_flood', 'unauthorized_flow']
+PASS  D2 ping -f is symmetric (srv1 replies at the same rate): ONE incident "pc2+srv1", marked symmetric
+        pc2+srv1
+PASS  D2b one-way flood: the source is pc2 (from its edge switch's rules), not symmetric
+        ['pc2 -> r1: 96546.9 pps']
+PASS  D2 scanner = vm1
+PASS  D2 rogue rule on hp1, cookie 0x99
+PASS  D2 link = the standby link
+PASS  D3 the evidence never tells the model what the detector suspects
+PASS  R1 rate limit with no meters -> documented fallback: temporary block of pc2 at arista2 port 2
+        ('BLOCK all from pc2 at arista2 port 2 for 120 s', 'No switch reports meters (/stats/meterfeatures max_meter 0). A rate limit falls back to a temporary block of the source at its edge port (hard_timeout 120 s, removes itself).')
+PASS  R2 scan -> block only TCP from vm1 at ovs1 (OVS), validated, 120 s
+        ('BLOCK TCP from vm1 at ovs1 port 2 for 120 s', [])
+PASS  R3 unauthorized -> delete exactly that rule (cookie 0x99) on hp1
+        DELETE rule cookie 0x99 priority 30 {'nw_dst': '10.10.20.21', 'dl_type': 2048, 'nw_src': '10.10.10.11'} on hp1
+PASS  R4 a "remove" aimed at the DNS rule (cookie 0x30) is refused by the validator
+        ['cookie 48 (dns_intercept) is protected: the AI never deletes it']
+PASS  R5 link failure -> verify failover (read-only check first)
+PASS  R5 failover check on the planted snapshot says redundancy is lost
+        standby link arista1:4-arista2:4 is DOWN: no redundancy left; 0 learned rules still point out of a dead port
+PASS  R6 a source that is no NSOT host is never blocked
+        source 10.10.10.250 is not an NSOT host: nothing safe to block
+PASS  P0 symmetric flood + model says "block pc2" -> ALERT only, nothing blocked (never on a guess)
+PASS  P1 AUTO, detector + model agree -> applied
+        ['BLOCK all from pc2 at arista2 port 2 for 120 s']
+PASS  P2 model says "none" -> NO action, counted as a disagreement
+PASS  P3 model names a different threat -> NO action
+PASS  P4 model recommends alert only -> alert, no change
+PASS  P5 HITL, operator says no -> declined, no change
+PASS  P6 HITL, operator says yes -> applied
+PASS  P7 model gives no valid answer -> NO action
+PASS  P8 validator refuses (protected cookie) -> NO action even in AUTO
+
+25/25 checks passed

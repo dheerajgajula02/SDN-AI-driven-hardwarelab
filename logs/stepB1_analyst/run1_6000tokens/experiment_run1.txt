@@ -1,0 +1,23 @@
+capturing clean_1 ...
+capturing clean_2 ...
+capturing planted_1 ...
+capturing planted_2 ...
+clean_1    v1_plain      health=degraded  found 0/0  downplayed 0  missed 0  false alarms 1  calls 2
+clean_1    v2_context    INVALID: answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)
+clean_1    v3_checklist  health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1
+clean_2    v1_plain      health=degraded  found 0/0  downplayed 0  missed 0  false alarms 1  calls 2
+clean_2    v2_context    INVALID: answer still invalid after a repair try: findings[0]: device "unknown" is not in the NSOT (switches: arista1, arista2, cisco1, hp1, ovs1, ovs2)
+clean_2    v3_checklist  health=healthy   found 0/0  downplayed 0  missed 0  false alarms 0  calls 1
+planted_1  v1_plain      INVALID: answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)
+planted_1  v2_context    INVALID: answer still invalid after a repair try: not valid JSON: Expecting value: line 1 column 1 (char 0)
+planted_1  v3_checklist  health=critical  found 4/4  downplayed 0  missed 0  false alarms 0  calls 2
+planted_2  v1_plain      health=critical  found 3/4  downplayed 1  missed 0  false alarms 0  calls 2
+planted_2  v2_context    INVALID: answer still invalid after a repair try: answer.summary: longer than 700 characters
+planted_2  v3_checklist  INVALID: answer still invalid after a repair try: not valid JSON: Unterminated string starting at: line 19 column 22 (char 1048)
+
+variant        found  missed  downplayed  false_alarms  invalid  calls
+v1_plain           3       0           1             2        1      6
+v2_context         0       0           0             0        4      0
+v3_checklist       4       0           0             0        1      4
+
+best prompt: v3_checklist

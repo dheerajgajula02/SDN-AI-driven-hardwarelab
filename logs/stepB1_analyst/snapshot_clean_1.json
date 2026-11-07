@@ -1,0 +1,1364 @@
+{
+ "collected_at": "2026-11-07T12:38:09.553430",
+ "controller": "http://100.110.3.67:8080",
+ "sample_seconds": 3.0,
+ "hardware_switches": [
+  "arista1",
+  "arista2",
+  "cisco1",
+  "hp1"
+ ],
+ "ovs_switches": [
+  "ovs1",
+  "ovs2"
+ ],
+ "switches": {
+  "connected": [
+   "arista1",
+   "arista2",
+   "cisco1",
+   "hp1",
+   "ovs1",
+   "ovs2"
+  ],
+  "missing": [],
+  "unknown_dpids": []
+ },
+ "flows": {
+  "arista1": [
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:32",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:31"
+    },
+    "actions": [
+     "OUTPUT:3"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 964,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "0x0000",
+     "dl_src": "00:00:00:00:10:11",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:10}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 25,
+    "bytes": 2394,
+    "age_s": 7,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:10:11"
+    },
+    "actions": [
+     "POP_VLAN",
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 25,
+    "bytes": 2494,
+    "age_s": 7,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:31",
+     "in_port": 3,
+     "dl_dst": "00:00:00:00:20:32"
+    },
+    "actions": [
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1066,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 31,
+    "bytes": 2208,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 10,
+    "cookie": 80,
+    "owner": "tcp_sensor",
+    "match": {
+     "nw_proto": 6,
+     "dl_type": 2048,
+     "in_port": 2
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 4,
+    "bytes": 355,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 3320,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 153,
+    "bytes": 14000,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ],
+  "arista2": [
+   {
+    "priority": 11,
+    "cookie": 81,
+    "owner": "tcp_sensor_connection",
+    "match": {
+     "dl_src": "00:00:00:00:10:12",
+     "tp_dst": 80,
+     "dl_type": 2048,
+     "dl_dst": "00:00:00:00:01:01",
+     "nw_dst": "10.10.20.21",
+     "nw_proto": 6,
+     "nw_src": "10.10.10.12",
+     "dl_vlan": "0x0000",
+     "tp_src": 34914,
+     "in_port": 2
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:10}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 5,
+    "bytes": 405,
+    "age_s": 7,
+    "idle_timeout": 10,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:31",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:32"
+    },
+    "actions": [
+     "OUTPUT:3"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1066,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:10:12"
+    },
+    "actions": [
+     "POP_VLAN",
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1050,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 0.2
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:32",
+     "in_port": 3,
+     "dl_dst": "00:00:00:00:20:31"
+    },
+    "actions": [
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 964,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "0x0000",
+     "dl_src": "00:00:00:00:10:12",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:10}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 3,
+    "bytes": 182,
+    "age_s": 7,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 0.2
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 772,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 10,
+    "cookie": 80,
+    "owner": "tcp_sensor",
+    "match": {
+     "nw_proto": 6,
+     "dl_type": 2048,
+     "in_port": 2
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 991,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 29,
+    "bytes": 9398,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 120,
+    "bytes": 12020,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ],
+  "cisco1": [
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:21",
+     "in_port": 4,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 35,
+    "bytes": 3437,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:31",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:20:32"
+    },
+    "actions": [
+     "OUTPUT:3"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1066,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:10:12"
+    },
+    "actions": [
+     "OUTPUT:3"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1050,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 0.2
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:10:11",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 25,
+    "bytes": 2494,
+    "age_s": 7,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:10:12",
+     "in_port": 3,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 9,
+    "bytes": 697,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 0.2
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "10",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:10:11"
+    },
+    "actions": [
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 25,
+    "bytes": 2494,
+    "age_s": 7,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:21"
+    },
+    "actions": [
+     "OUTPUT:4"
+    ],
+    "drop": false,
+    "packets": 35,
+    "bytes": 3293,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:32",
+     "in_port": 3,
+     "dl_dst": "00:00:00:00:20:31"
+    },
+    "actions": [
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 964,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.1
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 22,
+    "bytes": 1650,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 29,
+    "bytes": 9514,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 205,
+    "bytes": 20029,
+    "age_s": 1579,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ],
+  "hp1": [
+   {
+    "priority": 11,
+    "cookie": 81,
+    "owner": "tcp_sensor_connection",
+    "match": {
+     "dl_src": "00:00:00:00:20:21",
+     "tp_dst": 34914,
+     "dl_type": 2048,
+     "dl_dst": "00:00:00:00:01:01",
+     "nw_dst": "10.10.10.12",
+     "nw_proto": 6,
+     "nw_src": "10.10.20.21",
+     "dl_vlan": "0x0000",
+     "tp_src": 80,
+     "in_port": 2
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:20}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 5,
+    "bytes": 549,
+    "age_s": 8,
+    "idle_timeout": 10,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "0x0000",
+     "dl_src": "00:00:00:00:20:21",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:01:01"
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:20}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 29,
+    "bytes": 2674,
+    "age_s": 8,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:01:01",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:21"
+    },
+    "actions": [
+     "POP_VLAN",
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 35,
+    "bytes": 3293,
+    "age_s": 51,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 3.6
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 0,
+    "bytes": 0,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 10,
+    "cookie": 80,
+    "owner": "tcp_sensor",
+    "match": {
+     "nw_proto": 6,
+     "dl_type": 2048,
+     "in_port": 2
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 807,
+    "bytes": 43778,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 4,
+    "bytes": 1328,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 97,
+    "bytes": 7436,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ],
+  "ovs1": [
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "0x0000",
+     "dl_src": "00:00:00:00:20:31",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:20:32"
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:20}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1022,
+    "age_s": 6,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.2
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:32",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:31"
+    },
+    "actions": [
+     "POP_VLAN",
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 964,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.2
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 6,
+    "bytes": 432,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 10,
+    "cookie": 80,
+    "owner": "tcp_sensor",
+    "match": {
+     "nw_proto": 6,
+     "dl_type": 2048,
+     "in_port": 2
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 800,
+    "bytes": 59200,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 4,
+    "bytes": 1328,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 106,
+    "bytes": 8410,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ],
+  "ovs2": [
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "0x0000",
+     "dl_src": "00:00:00:00:20:32",
+     "in_port": 2,
+     "dl_dst": "00:00:00:00:20:31"
+    },
+    "actions": [
+     "PUSH_VLAN:33024",
+     "SET_FIELD: {vlan_vid:20}",
+     "OUTPUT:1"
+    ],
+    "drop": false,
+    "packets": 10,
+    "bytes": 924,
+    "age_s": 5,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.2
+   },
+   {
+    "priority": 1,
+    "cookie": 16,
+    "owner": "learned",
+    "match": {
+     "dl_vlan": "20",
+     "dl_src": "00:00:00:00:20:31",
+     "in_port": 1,
+     "dl_dst": "00:00:00:00:20:32"
+    },
+    "actions": [
+     "POP_VLAN",
+     "OUTPUT:2"
+    ],
+    "drop": false,
+    "packets": 11,
+    "bytes": 1066,
+    "age_s": 6,
+    "idle_timeout": 60,
+    "hard_timeout": 0,
+    "pps": 2.2
+   },
+   {
+    "priority": 50,
+    "cookie": 48,
+    "owner": "dns_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 53,
+     "dl_type": 2048
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 3,
+    "bytes": 255,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 10,
+    "cookie": 80,
+    "owner": "tcp_sensor",
+    "match": {
+     "nw_proto": 6,
+     "dl_type": 2048,
+     "in_port": 2
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 0,
+    "bytes": 0,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 50,
+    "cookie": 64,
+    "owner": "dhcp_intercept",
+    "match": {
+     "nw_proto": 17,
+     "tp_dst": 67,
+     "dl_type": 2048,
+     "tp_src": 68
+    },
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 4,
+    "bytes": 1328,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   },
+   {
+    "priority": 0,
+    "cookie": 0,
+    "owner": "table_miss",
+    "match": {},
+    "actions": [
+     "OUTPUT:CONTROLLER"
+    ],
+    "drop": false,
+    "packets": 84,
+    "bytes": 6132,
+    "age_s": 1580,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "pps": 0.0
+   }
+  ]
+ },
+ "drop_rules": {
+  "arista1": [],
+  "arista2": [],
+  "cisco1": [],
+  "hp1": [],
+  "ovs1": [],
+  "ovs2": []
+ },
+ "unauthorized_rules": {
+  "arista1": [],
+  "arista2": [],
+  "cisco1": [],
+  "hp1": [],
+  "ovs1": [],
+  "ovs2": []
+ },
+ "port_rates": {
+  "arista1": {
+   "3": {
+    "to": "ovs1:1",
+    "valid": true,
+    "rx_pps": 2.1,
+    "tx_pps": 2.1,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 1046,
+    "tx_total": 1112
+   },
+   "1": {
+    "to": "cisco1:2",
+    "valid": true,
+    "rx_pps": 5.7,
+    "tx_pps": 5.7,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 3711,
+    "tx_total": 3853
+   },
+   "2": {
+    "to": "pc1",
+    "valid": true,
+    "rx_pps": 3.6,
+    "tx_pps": 3.6,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 2779,
+    "tx_total": 2636
+   },
+   "4": {
+    "to": "arista2:4",
+    "valid": true,
+    "rx_pps": 0.0,
+    "tx_pps": 0.0,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 44,
+    "tx_total": 42
+   },
+   "_seconds": 4.2
+  },
+  "arista2": {
+   "3": {
+    "to": "ovs2:1",
+    "valid": true,
+    "rx_pps": 2.1,
+    "tx_pps": 2.1,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 230,
+    "tx_total": 290
+   },
+   "1": {
+    "to": "cisco1:3",
+    "valid": true,
+    "rx_pps": 2.4,
+    "tx_pps": 2.4,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4165302,
+    "tx_total": 4165292
+   },
+   "4": {
+    "to": "arista1:4",
+    "valid": true,
+    "rx_pps": 0.0,
+    "tx_pps": 0.0,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 42,
+    "tx_total": 44
+   },
+   "2": {
+    "to": "pc2",
+    "valid": true,
+    "rx_pps": 0.2,
+    "tx_pps": 0.2,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4165109,
+    "tx_total": 4165095
+   },
+   "_seconds": 4.2
+  },
+  "cisco1": {
+   "3": {
+    "to": "arista2:1",
+    "valid": true,
+    "rx_pps": 2.6,
+    "tx_pps": 2.6,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4165293,
+    "tx_total": 4165303
+   },
+   "1": {
+    "to": "r1",
+    "valid": true,
+    "rx_pps": 7.4,
+    "tx_pps": 7.4,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 8335262,
+    "tx_total": 8335301
+   },
+   "4": {
+    "to": "hp1:1",
+    "valid": true,
+    "rx_pps": 3.6,
+    "tx_pps": 3.6,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4168308,
+    "tx_total": 4168527
+   },
+   "2": {
+    "to": "arista1:1",
+    "valid": true,
+    "rx_pps": 6.0,
+    "tx_pps": 6.0,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 3855,
+    "tx_total": 3713
+   },
+   "_seconds": 4.19
+  },
+  "hp1": {
+   "1": {
+    "to": "cisco1:4",
+    "valid": true,
+    "rx_pps": 3.6,
+    "tx_pps": 3.6,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4168527,
+    "tx_total": 4168308
+   },
+   "2": {
+    "to": "srv1",
+    "valid": true,
+    "rx_pps": 3.6,
+    "tx_pps": 3.6,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 4168308,
+    "tx_total": 4168324
+   },
+   "_seconds": 4.18
+  },
+  "ovs1": {
+   "1": {
+    "to": "arista1:3",
+    "valid": true,
+    "rx_pps": 2.2,
+    "tx_pps": 2.2,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 1113,
+    "tx_total": 1047
+   },
+   "2": {
+    "to": "vm1",
+    "valid": true,
+    "rx_pps": 2.2,
+    "tx_pps": 2.2,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 1049,
+    "tx_total": 1064
+   },
+   "_seconds": 4.16
+  },
+  "ovs2": {
+   "1": {
+    "to": "arista2:3",
+    "valid": true,
+    "rx_pps": 2.2,
+    "tx_pps": 2.2,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 291,
+    "tx_total": 231
+   },
+   "2": {
+    "to": "vm2",
+    "valid": true,
+    "rx_pps": 2.2,
+    "tx_pps": 2.2,
+    "rx_dropped": 0,
+    "tx_dropped": 0,
+    "errors": 0,
+    "rx_total": 234,
+    "tx_total": 256
+   },
+   "_seconds": 4.14
+  }
+ },
+ "port_state": {
+  "arista1": {
+   "3": "up",
+   "1": "up",
+   "2": "up",
+   "4": "up"
+  },
+  "arista2": {
+   "3": "up",
+   "1": "up",
+   "4": "up",
+   "2": "up"
+  },
+  "cisco1": {
+   "3": "up",
+   "1": "up",
+   "4": "up",
+   "2": "up"
+  },
+  "hp1": {
+   "1": "up",
+   "2": "up"
+  },
+  "ovs1": {
+   "1": "up",
+   "2": "up"
+  },
+  "ovs2": {
+   "1": "up",
+   "2": "up"
+  }
+ },
+ "links": [
+  {
+   "link": "cisco1:2-arista1:1",
+   "a": "cisco1",
+   "b": "arista1",
+   "standby": false,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 4
+  },
+  {
+   "link": "cisco1:3-arista2:1",
+   "a": "cisco1",
+   "b": "arista2",
+   "standby": false,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 4
+  },
+  {
+   "link": "cisco1:4-hp1:1",
+   "a": "cisco1",
+   "b": "hp1",
+   "standby": false,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 2
+  },
+  {
+   "link": "arista1:3-ovs1:1",
+   "a": "arista1",
+   "b": "ovs1",
+   "standby": false,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 2
+  },
+  {
+   "link": "arista1:4-arista2:4",
+   "a": "arista1",
+   "b": "arista2",
+   "standby": true,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 0
+  },
+  {
+   "link": "arista2:3-ovs2:1",
+   "a": "arista2",
+   "b": "ovs2",
+   "standby": false,
+   "state": "up",
+   "why": "",
+   "learned_rules_using_it": 2
+  }
+ ],
+ "tcp_sensor": {
+  "stats": {
+   "replies": 815,
+   "new_connections": 807,
+   "packets_seen": 1622
+  },
+  "sources": {
+   "10.10.10.12": {
+    "dst_hosts": [
+     "srv1"
+    ],
+    "distinct_dst_hosts": 1,
+    "distinct_dst_ports": 1,
+    "example_ports": [
+     80
+    ],
+    "host": "pc2",
+    "new_connections": 1,
+    "seconds_since_last": 9.5
+   }
+  },
+  "window_seconds": 60
+ },
+ "rest_calls": 32
+}

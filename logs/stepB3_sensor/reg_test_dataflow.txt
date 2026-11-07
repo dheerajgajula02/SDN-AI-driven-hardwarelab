@@ -1,0 +1,47 @@
+== DNS filter ==
+PASS  D1 all 6 switches have the DNS (0x30) and DHCP (0x40) intercept rules, priority 50
+PASS  D2 allowed: example.com query reaches the router port (cisco1 port 1), real answer
+        answer ['172.66.147.243', '104.20.23.154']
+        00:00:00:00:10:11 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 75: vlan 10, p 0, ethertype IPv4, 10.10.10.11.52202 > 10.10.10.1.53: 33504+ A
+PASS  D3 blocked: evil.com query NEVER reaches the router port
+        router port saw 0 evil.com packets
+PASS  D3 blocked: pc1 receives a reply "from 10.10.10.1" pointing to the blocked page
+        00:00:00:00:01:01 > 00:00:00:00:10:11, ethertype IPv4 (0x0800), length 84: 10.10.10.1.53 > 10.10.10.11.34611: 64663 1/0/0 A 10.10.20.21 (42)
+PASS  D4 bypass attempt: evil.com via 8.8.8.8 is still blocked (forged reply "from 8.8.8.8")
+        00:00:00:00:01:01 > 00:00:00:00:10:11, ethertype IPv4 (0x0800), length 84: 8.8.8.8.53 > 10.10.10.11.42704: 5453 1/0/0 A 10.10.20.21 (42)
+PASS  D4 bypass check: example.com via 8.8.8.8 is allowed and answered from the Internet
+        ['104.20.23.154', '172.66.147.243']
+PASS  D5 browsing to evil.com loads the blocked page
+        il.com -> 10.10.20.21
+2. Browser / HTTP Page:    <h1>ACCESS_BLOCKED_BY_SDN_CONTROLLER</h1>
+PASS  D6 vm2 (VLAN 20, behind ovs2): Cloudflare-flagged domain is blocked
+        ['10.10.20.21']
+PASS  D7 router log: example.com was asked; evil.com and phishing.testcategory.com never were
+        router saw: ['example.com']
+
+== DHCP to router ==
+PASS  H1 pc2 gets a lease from the router
+PASS  H1 pc2 sends a broadcast (ff:ff:ff:ff:ff:ff)
+        00:00:00:00:10:12 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 322: 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 00:00:00:00:10:1
+PASS  H1 leaving the edge switch it is unicast to the router MAC, on every request
+        00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 326: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHC
+        00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 338: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHC
+PASS  H1 the router receives it addressed to its own MAC
+        00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 326: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHC
+PASS  H1 no DHCP packet on any other link in the VLAN (6 links watched)
+        all 6 links: 0 packets
+PASS  H2 client with an IP (10.10.10.118): router receives it with IP dst 10.10.10.1 and router MAC
+        00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 294: vlan 10, p 0, ethertype IPv4, 10.10.10.118.68 > 10.10.10.1.67: BOOTP/DHC
+PASS  H2 the router answers it (DHCPACK back to pc2)
+        reply type 5 from 10.10.10.1
+
+== Failover ==
+PASS  F1 link cut: pc2 still gets a lease
+PASS  F1 link cut: DHCP goes over the standby link (arista2 port 4), unicast to the router
+        00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 326: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHC
+PASS  F1 link cut: DNS still filtered (evil.com blocked, example.com allowed)
+        evil ['10.10.20.21'], example ['104.20.23.154', '172.66.147.243']
+PASS  F2 link restored: lease again, via arista2 port 1, nothing on the standby link
+        port 1: 4, standby: 0 packets
+
+20/20 checks passed
