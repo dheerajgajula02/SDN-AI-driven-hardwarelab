@@ -1,0 +1,40 @@
+loading app part_a/vlan_switch_13.py
+loading app ryu.app.ofctl_rest
+loading app ryu.controller.ofp_handler
+creating context wsgi
+instantiating app None of DPSet
+creating context dpset
+instantiating app part_a/vlan_switch_13.py of VlanSwitch13
+instantiating app ryu.app.ofctl_rest of RestStatsApi
+instantiating app ryu.controller.ofp_handler of OFPHandler
+(2828) wsgi starting up on http://0.0.0.0:8080
+(2828) accepted ('127.0.0.1', 52806)
+127.0.0.1 - - [06/Nov/2026 13:35:08] "GET /stats/switches HTTP/1.1" 200 109 0.007065
+(2828) accepted ('100.96.78.56', 41764)
+100.96.78.56 - - [06/Nov/2026 13:35:12] "GET /stats/switches HTTP/1.1" 200 133 0.000403
+switch 2 connected, table-miss rule installed
+switch 1 connected, table-miss rule installed
+flow: dpid=2 vlan=10 in_port=1 dst=00:00:00:00:00:01 -> port 3
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:00:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:00:03 -> port 3
+flow: dpid=2 vlan=10 in_port=3 dst=00:00:00:00:00:03 -> port 1
+flow: dpid=2 vlan=20 in_port=2 dst=00:00:00:00:00:02 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:00:02 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:00:04 -> port 3
+flow: dpid=2 vlan=20 in_port=3 dst=00:00:00:00:00:04 -> port 2
+switch 2 connected, table-miss rule installed
+switch 1 connected, table-miss rule installed
+flow: dpid=2 vlan=10 in_port=1 dst=00:00:00:00:00:01 -> port 3
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:00:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:00:03 -> port 3
+flow: dpid=2 vlan=10 in_port=3 dst=00:00:00:00:00:03 -> port 1
+(2828) accepted ('100.96.78.56', 60056)
+100.96.78.56 - - [06/Nov/2026 13:36:09] "GET /stats/switches HTTP/1.1" 200 137 0.000350
+(2828) accepted ('100.96.78.56', 60068)
+100.96.78.56 - - [06/Nov/2026 13:36:09] "GET /stats/flow/1 HTTP/1.1" 200 1031 0.003114
+(2828) accepted ('100.96.78.56', 60070)
+100.96.78.56 - - [06/Nov/2026 13:36:09] "GET /stats/flow/2 HTTP/1.1" 200 1030 0.003009
+flow: dpid=2 vlan=20 in_port=2 dst=00:00:00:00:00:02 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:00:02 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:00:04 -> port 3
+flow: dpid=2 vlan=20 in_port=3 dst=00:00:00:00:00:04 -> port 2

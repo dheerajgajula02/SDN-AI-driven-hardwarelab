@@ -1,0 +1,36 @@
+{
+  "_about": "Step 1 test network (2 switches, 1 trunk). Used by the offline test and step1_two_switch.py.",
+
+  "controller": {"ip": "10.224.78.132", "openflow_port": 6633, "rest_port": 8080},
+
+  "vlans": {
+    "10": {"name": "users",   "subnet": "10.0.0.0/24", "gateway": "10.0.0.254"},
+    "20": {"name": "servers", "subnet": "10.0.0.0/24", "gateway": "10.0.0.254"}
+  },
+
+  "switches": {
+    "s1": {
+      "dpid": 1, "vendor": "ovs", "vlan_mode": "controller",
+      "ports": {
+        "1": {"to": "h1",   "mode": "access", "vlan": 10},
+        "2": {"to": "h2",   "mode": "access", "vlan": 20},
+        "3": {"to": "s2:3", "mode": "trunk",  "vlans": [10, 20]}
+      }
+    },
+    "s2": {
+      "dpid": 2, "vendor": "ovs", "vlan_mode": "controller",
+      "ports": {
+        "1": {"to": "h3",   "mode": "access", "vlan": 10},
+        "2": {"to": "h4",   "mode": "access", "vlan": 20},
+        "3": {"to": "s1:3", "mode": "trunk",  "vlans": [10, 20]}
+      }
+    }
+  },
+
+  "hosts": {
+    "h1": {"ip": "10.0.0.1/24", "mac": "00:00:00:00:00:01"},
+    "h2": {"ip": "10.0.0.2/24", "mac": "00:00:00:00:00:02"},
+    "h3": {"ip": "10.0.0.3/24", "mac": "00:00:00:00:00:03"},
+    "h4": {"ip": "10.0.0.4/24", "mac": "00:00:00:00:00:04"}
+  }
+}

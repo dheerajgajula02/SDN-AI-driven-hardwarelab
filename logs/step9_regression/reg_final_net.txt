@@ -1,0 +1,71 @@
+*** Creating network
+*** Adding hosts:
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Adding switches:
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Adding links:
+(arista1, arista2) (arista1, cisco1) (arista1, ovs1) (arista2, cisco1) (arista2, ovs2) (cisco1, hp1) (pc1, arista1) (pc2, arista2) (r1, cisco1) (r1, inet) (srv1, hp1) (vm1, ovs1) (vm2, ovs2) 
+*** Configuring hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Starting controller
+
+*** Starting 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 ...
+
+===== switches reset to bare (protocols | other-config | fail_mode | controller) =====
+arista1  [] | {disable-in-band="true", | dp-desc="arista1"} | []
+arista2  [] | {disable-in-band="true", | dp-desc="arista2"} | []
+cisco1   [] | {disable-in-band="true", | dp-desc="cisco1"} | []
+hp1      [] | {disable-in-band="true", | dp-desc="hp1"} | []
+ovs1     [] | {disable-in-band="true", | dp-desc="ovs1"} | []
+ovs2     [] | {disable-in-band="true", | dp-desc="ovs2"} | []
+
+===== waiting =====
+run part_a/nsot_apply.py on the controller now (waiting up to 600 s)
+
+===== after nsot_apply =====
+arista1  ["OpenFlow13"] | {datapath-id="000000000000000b", | disable-in-band="true", | dp-desc="arista1"} | secure | tcp:10.224.78.132:6633
+arista2  ["OpenFlow13"] | {datapath-id="000000000000000c", | disable-in-band="true", | dp-desc="arista2"} | secure | tcp:10.224.78.132:6633
+cisco1   ["OpenFlow13"] | {datapath-id="0000000000000001", | disable-in-band="true", | dp-desc="cisco1"} | secure | tcp:10.224.78.132:6633
+hp1      ["OpenFlow13"] | {datapath-id="0000000000000015", | disable-in-band="true", | dp-desc="hp1"} | secure | tcp:10.224.78.132:6633
+ovs1     ["OpenFlow13"] | {datapath-id="000000000000001f", | disable-in-band="true", | dp-desc="ovs1"} | secure | tcp:10.224.78.132:6633
+ovs2     ["OpenFlow13"] | {datapath-id="0000000000000020", | disable-in-band="true", | dp-desc="ovs2"} | secure | tcp:10.224.78.132:6633
+
+===== A3.1 DNS intercept flow on arista1 (expect priority=50, cookie=0x30, udp,tp_dst=53 -> CONTROLLER) =====
+cookie=0x30, duration=5.042s, table=0, n_packets=0, n_bytes=0, priority=50,udp,tp_dst=53 actions=CONTROLLER:65535
+
+===== A3 DNS + HTTP test from pc1: example.com (expect ALLOW -> real Internet IP (<title>Example Domain</title>)) =====
+1. DNS Reply (10.10.10.1:53): example.com -> 104.20.23.154
+2. Browser / HTTP Page:    <title>Example Domain</title>
+
+===== A3 DNS + HTTP test from pc1: phishing.testcategory.com (expect BLOCK by Cloudflare 1.1.1.3 JSON -> 10.10.20.21 (ACCESS_BLOCKED)) =====
+1. DNS Reply (10.10.10.1:53): phishing.testcategory.com -> 10.10.20.21
+2. Browser / HTTP Page:    <h1>ACCESS_BLOCKED_BY_SDN_CONTROLLER</h1>
+
+===== A3 DNS + HTTP test from pc1: evil.com (expect BLOCK by custom blacklist -> 10.10.20.21 (ACCESS_BLOCKED)) =====
+1. DNS Reply (10.10.10.1:53): evil.com -> 10.10.20.21
+2. Browser / HTTP Page:    <h1>ACCESS_BLOCKED_BY_SDN_CONTROLLER</h1>
+
+===== A3 DNS + HTTP test from pc1: good.lab9.lan (expect ALLOW -> 203.0.113.2 (REAL_INTERNET_SITE)) =====
+1. DNS Reply (10.10.10.1:53): good.lab9.lan -> 203.0.113.2
+2. Browser / HTTP Page:    <h1>REAL_INTERNET_SITE</h1>
+
+===== A3 DNS + HTTP test from pc1: bad.lab9.lan (expect BLOCK -> 10.10.20.21 (ACCESS_BLOCKED_BY_SDN_CONTROLLER)) =====
+1. DNS Reply (10.10.10.1:53): bad.lab9.lan -> 10.10.20.21
+2. Browser / HTTP Page:    <h1>ACCESS_BLOCKED_BY_SDN_CONTROLLER</h1>
+
+===== A3 r1 dnsmasq log (blocked domains must NOT appear here — controller intercepted them) =====
+Nov  7 06:35:15 dnsmasq[20764]: started, version 2.68 cachesize 150
+Nov  7 06:35:15 dnsmasq[20764]: compile time options: IPv6 GNU-getopt DBus i18n IDN DHCP DHCPv6 no-Lua TFTP conntrack ipset auth
+Nov  7 06:35:15 dnsmasq-dhcp[20764]: DHCP, IP range 10.10.20.100 -- 10.10.20.199, lease time 12h
+Nov  7 06:35:15 dnsmasq-dhcp[20764]: DHCP, IP range 10.10.10.100 -- 10.10.10.199, lease time 12h
+Nov  7 06:35:15 dnsmasq[20764]: using nameserver 8.8.8.8#53
+Nov  7 06:35:15 dnsmasq[20764]: read /etc/hosts - 6 addresses
+Nov  7 06:35:35 dnsmasq[20764]: query[A] example.com from 10.10.10.11
+Nov  7 06:35:35 dnsmasq[20764]: forwarded example.com to 8.8.8.8
+Nov  7 06:35:35 dnsmasq[20764]: reply example.com is 172.66.147.243
+Nov  7 06:35:35 dnsmasq[20764]: reply example.com is 104.20.23.154
+Nov  7 06:35:35 dnsmasq[20764]: query[A] good.lab9.lan from 10.10.10.11
+Nov  7 06:35:35 dnsmasq[20764]: config good.lab9.lan is 203.0.113.2
+*** Starting CLI:
+mininet> 

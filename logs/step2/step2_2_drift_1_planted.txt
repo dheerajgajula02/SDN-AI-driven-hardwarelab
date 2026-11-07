@@ -1,0 +1,10 @@
+NSOT: /home/sdn/lab9/part_a/nsot.json (6 switches)
+
+== drift ==
+  switch     what           fix?  detail
+  arista2    controller     yes   expected tcp:10.224.78.132:6633, found tcp:10.224.78.132:6653
+  arista2    connection     yes   controller does not see dpid 12
+  hp1        fail_mode      yes   expected secure, found standalone
+  ovs1       port 3         no    on device (rogue0) but not in NSOT
+  ovs2       protocols      yes   expected OpenFlow13, found OpenFlow10
+  ovs2       connection     yes   controller does not see dpid 32

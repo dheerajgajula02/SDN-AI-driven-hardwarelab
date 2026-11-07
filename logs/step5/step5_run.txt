@@ -1,0 +1,147 @@
+*** Creating network
+*** Adding hosts:
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Adding switches:
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Adding links:
+(arista1, arista2) (arista1, cisco1) (arista1, ovs1) (arista2, cisco1) (arista2, ovs2) (cisco1, hp1) (pc1, arista1) (pc2, arista2) (r1, cisco1) (r1, inet) (srv1, hp1) (vm1, ovs1) (vm2, ovs2) 
+*** Configuring hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Starting controller
+
+*** Starting 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 ...
+
+===== switches reset to bare (protocols | other-config | fail_mode | controller) =====
+arista1  [] | {disable-in-band="true", | dp-desc="arista1"} | []
+arista2  [] | {disable-in-band="true", | dp-desc="arista2"} | []
+cisco1   [] | {disable-in-band="true", | dp-desc="cisco1"} | []
+hp1      [] | {disable-in-band="true", | dp-desc="hp1"} | []
+ovs1     [] | {disable-in-band="true", | dp-desc="ovs1"} | []
+ovs2     [] | {disable-in-band="true", | dp-desc="ovs2"} | []
+
+===== waiting =====
+run part_a/nsot_apply.py on the controller now (waiting up to 600 s)
+
+===== after nsot_apply =====
+arista1  ["OpenFlow13"] | {datapath-id="000000000000000b", | disable-in-band="true", | dp-desc="arista1"} | secure | tcp:10.224.78.132:6633
+arista2  ["OpenFlow13"] | {datapath-id="000000000000000c", | disable-in-band="true", | dp-desc="arista2"} | secure | tcp:10.224.78.132:6633
+cisco1   ["OpenFlow13"] | {datapath-id="0000000000000001", | disable-in-band="true", | dp-desc="cisco1"} | secure | tcp:10.224.78.132:6633
+hp1      ["OpenFlow13"] | {datapath-id="0000000000000015", | disable-in-band="true", | dp-desc="hp1"} | secure | tcp:10.224.78.132:6633
+ovs1     ["OpenFlow13"] | {datapath-id="000000000000001f", | disable-in-band="true", | dp-desc="ovs1"} | secure | tcp:10.224.78.132:6633
+ovs2     ["OpenFlow13"] | {datapath-id="0000000000000020", | disable-in-band="true", | dp-desc="ovs2"} | secure | tcp:10.224.78.132:6633
+
+===== router r1 =====
+1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+5: r1-eth1    inet 203.0.113.1/30 scope global r1-eth1\       valid_lft forever preferred_lft forever
+6: r1-eth0.10    inet 10.10.10.1/24 scope global r1-eth0.10\       valid_lft forever preferred_lft forever
+7: r1-eth0.20    inet 10.10.20.1/24 scope global r1-eth0.20\       valid_lft forever preferred_lft forever
+
+default via 203.0.113.2 dev r1-eth1 
+10.10.10.0/24 dev r1-eth0.10  proto kernel  scope link  src 10.10.10.1 
+10.10.20.0/24 dev r1-eth0.20  proto kernel  scope link  src 10.10.20.1 
+203.0.113.0/30 dev r1-eth1  proto kernel  scope link  src 203.0.113.1 
+
+ip_forward=1
+-P POSTROUTING ACCEPT
+-A POSTROUTING -o r1-eth1 -j MASQUERADE
+
+dnsmasq pid: 20594
+
+===== pingall: expect 36/42 (all but inet -> inside, blocked by NAT) =====
+
+*** Ping: testing ping reachability
+inet -> X X X X X X 
+pc1 -> inet pc2 r1 srv1 vm1 vm2 
+pc2 -> inet pc1 r1 srv1 vm1 vm2 
+r1 -> inet pc1 pc2 srv1 vm1 vm2 
+srv1 -> inet pc1 pc2 r1 vm1 vm2 
+vm1 -> inet pc1 pc2 r1 srv1 vm2 
+vm2 -> inet pc1 pc2 r1 srv1 vm1 
+*** Results: 14% dropped (36/42 received)
+
+===== TTL: switched vs routed =====
+pc1 -> pc2  (same VLAN, switched): ttl=64  expect 64
+pc1 -> srv1 (VLAN 10 -> 20, via r1): ttl=63  expect 63
+pc1 -> inet (via r1 + NAT):          ttl=63  expect 63
+
+===== router-on-a-stick: cisco1 port 1 (cisco1-eth1) during pc1 -> srv1 =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on cisco1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+03:35:31.787589 00:00:00:00:10:11 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.10.10.11 > 10.10.20.21: ICMP echo request, id 21526, seq 1, length 64
+03:35:31.787607 00:00:00:00:01:01 > 00:00:00:00:20:21, ethertype 802.1Q (0x8100), length 102: vlan 20, p 0, ethertype IPv4, 10.10.10.11 > 10.10.20.21: ICMP echo request, id 21526, seq 1, length 64
+03:35:31.787630 00:00:00:00:20:21 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 102: vlan 20, p 0, ethertype IPv4, 10.10.20.21 > 10.10.10.11: ICMP echo reply, id 21526, seq 1, length 64
+03:35:31.787632 00:00:00:00:01:01 > 00:00:00:00:10:11, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.10.20.21 > 10.10.10.11: ICMP echo reply, id 21526, seq 1, length 64
+
+4 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+
+===== NAT: what inet sees during pc1 -> inet (source must be 203.0.113.1) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on inet-eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+03:35:35.794648 7a:60:49:0d:81:24 > 00:00:00:00:99:02, ethertype IPv4 (0x0800), length 98: 203.0.113.1 > 203.0.113.2: ICMP echo request, id 21533, seq 1, length 64
+03:35:35.794664 00:00:00:00:99:02 > 7a:60:49:0d:81:24, ethertype IPv4 (0x0800), length 98: 203.0.113.2 > 203.0.113.1: ICMP echo reply, id 21533, seq 1, length 64
+
+2 packets captured
+2 packets received by filter
+0 packets dropped by kernel
+
+===== management isolation: data VLAN hosts cannot reach management subnet (10.224.0.0/16) =====
+pc1  (VLAN 10) -> controller (10.224.78.132): no reply
+pc1  (VLAN 10) -> switch mgmt (10.224.76.126): no reply
+srv1 (VLAN 20) -> controller (10.224.78.132): no reply
+srv1 (VLAN 20) -> switch mgmt (10.224.76.126): no reply
+
+===== flows on cisco1 (port 1 = router) =====
+cookie=0x10, duration=10.183s, table=0, n_packets=12, n_bytes=1168, idle_timeout=60, priority=1,in_port=4,dl_vlan=20,dl_dst=00:00:00:00:01:01 actions=output:1
+ cookie=0x10, duration=10.148s, table=0, n_packets=8, n_bytes=760, idle_timeout=60, priority=1,in_port=3,dl_vlan=20,dl_dst=00:00:00:00:01:01 actions=output:1
+ cookie=0x10, duration=10.134s, table=0, n_packets=9, n_bytes=862, idle_timeout=60, priority=1,in_port=3,dl_vlan=10,dl_dst=00:00:00:00:01:01 actions=output:1
+ cookie=0x10, duration=10.088s, table=0, n_packets=2, n_bytes=148, idle_timeout=60, priority=1,in_port=4,dl_vlan=20,dl_dst=00:00:00:00:20:31 actions=output:2
+ cookie=0x10, duration=10.208s, table=0, n_packets=4, n_bytes=352, idle_timeout=60, priority=1,in_port=3,dl_vlan=10,dl_dst=00:00:00:00:10:11 actions=output:2
+ cookie=0x10, duration=10.146s, table=0, n_packets=7, n_bytes=658, idle_timeout=60, priority=1,in_port=1,dl_vlan=20,dl_dst=00:00:00:00:20:32 actions=output:3
+ cookie=0x10, duration=10.224s, table=0, n_packets=16, n_bytes=1632, idle_timeout=60, priority=1,in_port=1,dl_vlan=10,dl_dst=00:00:00:00:10:11 actions=output:2
+ cookie=0x10, duration=10.206s, table=0, n_packets=3, n_bytes=250, idle_timeout=60, priority=1,in_port=2,dl_vlan=10,dl_dst=00:00:00:00:10:12 actions=output:3
+ cookie=0x10, duration=10.137s, table=0, n_packets=10, n_bytes=964, idle_timeout=60, priority=1,in_port=1,dl_vlan=10,dl_dst=00:00:00:00:10:12 actions=output:3
+ cookie=0x10, duration=10.079s, table=0, n_packets=3, n_bytes=250, idle_timeout=60, priority=1,in_port=3,dl_vlan=20,dl_dst=00:00:00:00:20:21 actions=output:4
+ cookie=0x10, duration=10.163s, table=0, n_packets=8, n_bytes=760, idle_timeout=60, priority=1,in_port=2,dl_vlan=20,dl_dst=00:00:00:00:01:01 actions=output:1
+ cookie=0x10, duration=10.181s, table=0, n_packets=9, n_bytes=862, idle_timeout=60, priority=1,in_port=1,dl_vlan=20,dl_dst=00:00:00:00:20:21 actions=output:4
+ cookie=0x10, duration=10.219s, table=0, n_packets=15, n_bytes=1474, idle_timeout=60, priority=1,in_port=2,dl_vlan=10,dl_dst=00:00:00:00:01:01 actions=output:1
+ cookie=0x10, duration=10.057s, table=0, n_packets=3, n_bytes=250, idle_timeout=60, priority=1,in_port=3,dl_vlan=20,dl_dst=00:00:00:00:20:31 actions=output:2
+ cookie=0x10, duration=10.091s, table=0, n_packets=3, n_bytes=250, idle_timeout=60, priority=1,in_port=2,dl_vlan=20,dl_dst=00:00:00:00:20:21 actions=output:4
+ cookie=0x10, duration=10.055s, table=0, n_packets=2, n_bytes=148, idle_timeout=60, priority=1,in_port=2,dl_vlan=20,dl_dst=00:00:00:00:20:32 actions=output:3
+ cookie=0x10, duration=10.162s, table=0, n_packets=7, n_bytes=658, idle_timeout=60, priority=1,in_port=1,dl_vlan=20,dl_dst=00:00:00:00:20:31 actions=output:2
+ cookie=0x10, duration=10.077s, table=0, n_packets=2, n_bytes=148, idle_timeout=60, priority=1,in_port=4,dl_vlan=20,dl_dst=00:00:00:00:20:32 actions=output:3
+ cookie=0x0, duration=16.316s, table=0, n_packets=27, n_bytes=1746, priority=0 actions=CONTROLLER:65535
+
+===== DHCP: pc2 drops its static IP and asks the router =====
+udhcpc (v1.21.1) started
+Sending discover...
+Sending select for 10.10.10.118...
+Lease of 10.10.10.118 obtained, lease time 43200
+LEASE ip=10.10.10.118 subnet=255.255.255.0 router=10.10.10.1 server=10.10.10.1 lease=43200s
+
+    inet 10.10.10.118/24 scope global pc2-eth0
+default via 10.10.10.1 dev pc2-eth0 
+10.10.10.0/24 dev pc2-eth0  proto kernel  scope link  src 10.10.10.118 
+
+ping srv1 from the leased address:
+PING 10.10.20.21 (10.10.20.21) 56(84) bytes of data.
+64 bytes from 10.10.20.21: icmp_seq=1 ttl=63 time=4.08 ms
+64 bytes from 10.10.20.21: icmp_seq=2 ttl=63 time=0.246 ms
+
+--- 10.10.20.21 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 0.246/2.164/4.083/1.919 ms
+
+lease table on r1:
+1794094543 00:00:00:00:10:12 10.10.10.118 * 01:00:00:00:00:10:12
+*** Stopping 0 controllers
+
+*** Stopping 13 links
+.............
+*** Stopping 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Stopping 7 hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Done

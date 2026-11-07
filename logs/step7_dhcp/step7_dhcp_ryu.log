@@ -1,0 +1,82 @@
+loading app part_a/vlan_switch_13.py
+loading app ryu.app.ofctl_rest
+loading app ryu.controller.ofp_handler
+instantiating app None of DPSet
+creating context dpset
+creating context wsgi
+instantiating app part_a/vlan_switch_13.py of VlanSwitch13
+loaded 6 switches from /home/sdn/lab9/part_a/nsot.json
+6 switch links, blocked ports: [(11, 4), (12, 4)]
+instantiating app ryu.app.ofctl_rest of RestStatsApi
+instantiating app ryu.controller.ofp_handler of OFPHandler
+(26319) wsgi starting up on http://0.0.0.0:8080
+(26319) accepted ('100.71.188.80', 37122)
+100.71.188.80 - - [07/Nov/2026 06:01:11] "GET /lab9/dns/status HTTP/1.1" 200 483 0.010718
+switch 11 connected, table-miss + DNS + DHCP rules installed
+switch 1 connected, table-miss + DNS + DHCP rules installed
+switch 12 connected, table-miss + DNS + DHCP rules installed
+switch 31 connected, table-miss + DNS + DHCP rules installed
+switch 21 connected, table-miss + DNS + DHCP rules installed
+switch 32 connected, table-miss + DNS + DHCP rules installed
+100.71.188.80 - - [07/Nov/2026 06:01:13] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001792
+port 31:2 is DOWN
+port 31:2 is DOWN
+port 21:2 is DOWN
+port 11:2 is DOWN
+port 12:2 is DOWN
+port 21:2 is DOWN
+port 32:2 is DOWN
+port 11:2 is DOWN
+switch 1 disconnected
+switch 11 disconnected
+switch 31 disconnected
+switch 32 disconnected
+switch 21 disconnected
+switch 12 disconnected
+100.71.188.80 - - [07/Nov/2026 06:01:15] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001728
+(26319) accepted ('100.96.78.56', 37920)
+100.96.78.56 - - [07/Nov/2026 06:01:16] "GET /stats/switches HTTP/1.1" 200 133 0.000284
+100.71.188.80 - - [07/Nov/2026 06:01:17] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001578
+100.71.188.80 - - [07/Nov/2026 06:01:19] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001567
+100.71.188.80 - - [07/Nov/2026 06:01:21] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001604
+100.71.188.80 - - [07/Nov/2026 06:01:23] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001704
+100.71.188.80 - - [07/Nov/2026 06:01:25] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001881
+100.71.188.80 - - [07/Nov/2026 06:01:27] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001891
+100.71.188.80 - - [07/Nov/2026 06:01:29] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002077
+switch 1 connected, table-miss + DNS + DHCP rules installed
+switch 11 connected, table-miss + DNS + DHCP rules installed
+switch 12 connected, table-miss + DNS + DHCP rules installed
+switch 21 connected, table-miss + DNS + DHCP rules installed
+switch 31 connected, table-miss + DNS + DHCP rules installed
+switch 32 connected, table-miss + DNS + DHCP rules installed
+(26319) accepted ('127.0.0.1', 35110)
+127.0.0.1 - - [07/Nov/2026 06:01:30] "GET /stats/switches HTTP/1.1" 200 150 0.000277
+100.71.188.80 - - [07/Nov/2026 06:01:31] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001866
+100.71.188.80 - - [07/Nov/2026 06:01:33] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001875
+DHCP [DISCOVER] arista2 (dpid=12) port 2->1 vlan=10 client=00:00:00:00:10:12: eth ff:ff:ff:ff:ff:ff -> 00:00:00:00:01:01, ip dst 255.255.255.255
+DHCP [DISCOVER] cisco1 (dpid=1) port 3->1 vlan=10 client=00:00:00:00:10:12: eth 00:00:00:00:01:01 -> 00:00:00:00:01:01, ip dst 255.255.255.255
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=12 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 2
+DHCP [REQUEST] arista2 (dpid=12) port 2->1 vlan=10 client=00:00:00:00:10:12: eth ff:ff:ff:ff:ff:ff -> 00:00:00:00:01:01, ip dst 255.255.255.255
+DHCP [REQUEST] cisco1 (dpid=1) port 3->1 vlan=10 client=00:00:00:00:10:12: eth 00:00:00:00:01:01 -> 00:00:00:00:01:01, ip dst 255.255.255.255
+100.71.188.80 - - [07/Nov/2026 06:01:35] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001808
+100.71.188.80 - - [07/Nov/2026 06:01:37] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001770
+100.71.188.80 - - [07/Nov/2026 06:01:39] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002090
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:01:01 -> port 1
+100.71.188.80 - - [07/Nov/2026 06:01:41] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001976
+100.71.188.80 - - [07/Nov/2026 06:01:43] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001864
+100.71.188.80 - - [07/Nov/2026 06:01:45] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001910
+100.71.188.80 - - [07/Nov/2026 06:01:47] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002045
+100.71.188.80 - - [07/Nov/2026 06:01:49] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002051
+100.71.188.80 - - [07/Nov/2026 06:01:51] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001870
+100.71.188.80 - - [07/Nov/2026 06:01:53] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001909
+100.71.188.80 - - [07/Nov/2026 06:01:55] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002074
+100.71.188.80 - - [07/Nov/2026 06:01:57] "GET /lab9/dns/status HTTP/1.1" 200 483 0.003118
+100.71.188.80 - - [07/Nov/2026 06:01:59] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001815
+100.71.188.80 - - [07/Nov/2026 06:02:01] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001839
+100.71.188.80 - - [07/Nov/2026 06:02:03] "GET /lab9/dns/status HTTP/1.1" 200 483 0.002025
+100.71.188.80 - - [07/Nov/2026 06:02:05] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001932
+100.71.188.80 - - [07/Nov/2026 06:02:07] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001956
+100.71.188.80 - - [07/Nov/2026 06:02:09] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001865
+100.71.188.80 - - [07/Nov/2026 06:02:11] "GET /lab9/dns/status HTTP/1.1" 200 483 0.001844

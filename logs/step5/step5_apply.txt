@@ -1,0 +1,20 @@
+NSOT: /home/sdn/lab9/part_a/nsot.json (6 switches)
+
+== apply ==
+  cisco1   applied
+  arista1  applied
+  arista2  applied
+  hp1      applied
+  ovs1     applied
+  ovs2     applied
+
+== verify ==
+  switch   dpid  protocols    fail_mode  controller                 ctl sees   result
+  cisco1   1     OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+  arista1  11    OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+  arista2  12    OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+  hp1      21    OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+  ovs1     31    OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+  ovs2     32    OpenFlow13   secure     tcp:10.224.78.132:6633     yes        OK
+
+RESULT: all switches match the NSOT and are connected

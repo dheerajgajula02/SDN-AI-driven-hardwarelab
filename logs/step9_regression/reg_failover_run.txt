@@ -1,0 +1,128 @@
+*** Creating network
+*** Adding hosts:
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Adding switches:
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Adding links:
+(arista1, arista2) (arista1, cisco1) (arista1, ovs1) (arista2, cisco1) (arista2, ovs2) (cisco1, hp1) (pc1, arista1) (pc2, arista2) (r1, cisco1) (r1, inet) (srv1, hp1) (vm1, ovs1) (vm2, ovs2) 
+*** Configuring hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Starting controller
+
+*** Starting 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 ...
+
+===== switches reset to bare (protocols | other-config | fail_mode | controller) =====
+arista1  [] | {disable-in-band="true", | dp-desc="arista1"} | []
+arista2  [] | {disable-in-band="true", | dp-desc="arista2"} | []
+cisco1   [] | {disable-in-band="true", | dp-desc="cisco1"} | []
+hp1      [] | {disable-in-band="true", | dp-desc="hp1"} | []
+ovs1     [] | {disable-in-band="true", | dp-desc="ovs1"} | []
+ovs2     [] | {disable-in-band="true", | dp-desc="ovs2"} | []
+
+===== waiting =====
+run part_a/nsot_apply.py on the controller now (waiting up to 600 s)
+
+===== after nsot_apply =====
+arista1  ["OpenFlow13"] | {datapath-id="000000000000000b", | disable-in-band="true", | dp-desc="arista1"} | secure | tcp:10.224.78.132:6633
+arista2  ["OpenFlow13"] | {datapath-id="000000000000000c", | disable-in-band="true", | dp-desc="arista2"} | secure | tcp:10.224.78.132:6633
+cisco1   ["OpenFlow13"] | {datapath-id="0000000000000001", | disable-in-band="true", | dp-desc="cisco1"} | secure | tcp:10.224.78.132:6633
+hp1      ["OpenFlow13"] | {datapath-id="0000000000000015", | disable-in-band="true", | dp-desc="hp1"} | secure | tcp:10.224.78.132:6633
+ovs1     ["OpenFlow13"] | {datapath-id="000000000000001f", | disable-in-band="true", | dp-desc="ovs1"} | secure | tcp:10.224.78.132:6633
+ovs2     ["OpenFlow13"] | {datapath-id="0000000000000020", | disable-in-band="true", | dp-desc="ovs2"} | secure | tcp:10.224.78.132:6633
+
+===== A. baseline, standby link blocked: pingall (expect 36/42, no storm) =====
+
+*** Ping: testing ping reachability
+inet -> X X X X X X 
+pc1 -> inet pc2 r1 srv1 vm1 vm2 
+pc2 -> inet pc1 r1 srv1 vm1 vm2 
+r1 -> inet pc1 pc2 srv1 vm1 vm2 
+srv1 -> inet pc1 pc2 r1 vm1 vm2 
+vm1 -> inet pc1 pc2 r1 srv1 vm2 
+vm2 -> inet pc1 pc2 r1 srv1 vm1 
+*** Results: 14% dropped (36/42 received)
+
+===== A. flows using the standby link (expect none) =====
+(none)
+
+===== B. FAILOVER: pc2 -> srv1 every 0.1 s, cut cisco1-arista2 after 3 s =====
+80/80 replies, lost 0 (-, ~0.0 s), duplicates 0
+
+===== B. flows using the standby link (expect some) =====
+arista1: 1,in_port=1,dl_vlan=20,dl_src=00:00:00:00:20:21,dl_dst=00:00:00:00:20:32 actions=output:4
+arista1: 1,in_port=4,dl_vlan=10,dl_src=00:00:00:00:10:12,dl_dst=00:00:00:00:10:11 actions=strip_vlan,output:2
+arista1: 1,in_port=1,dl_vlan=20,dl_src=00:00:00:00:01:01,dl_dst=00:00:00:00:20:32 actions=output:4
+arista1: 1,in_port=4,dl_vlan=10,dl_src=00:00:00:00:10:12,dl_dst=00:00:00:00:01:01 actions=output:1
+arista1: 1,in_port=1,dl_vlan=10,dl_src=00:00:00:00:01:01,dl_dst=00:00:00:00:10:12 actions=output:4
+arista1: 1,in_port=4,dl_vlan=20,dl_src=00:00:00:00:20:32,dl_dst=00:00:00:00:20:31 actions=output:3
+arista1: 1,in_port=2,vlan_tci=0x0000/0x1fff,dl_src=00:00:00:00:10:11,dl_dst=00:00:00:00:10:12 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:4
+arista1: 1,in_port=3,dl_vlan=20,dl_src=00:00:00:00:20:31,dl_dst=00:00:00:00:20:32 actions=output:4
+arista1: 1,in_port=4,dl_vlan=20,dl_src=00:00:00:00:20:32,dl_dst=00:00:00:00:01:01 actions=output:1
+arista2: 1,in_port=4,dl_vlan=20,dl_src=00:00:00:00:01:01,dl_dst=00:00:00:00:20:32 actions=output:3
+arista2: 1,in_port=4,dl_vlan=10,dl_src=00:00:00:00:01:01,dl_dst=00:00:00:00:10:12 actions=strip_vlan,output:2
+arista2: 1,in_port=4,dl_vlan=20,dl_src=00:00:00:00:20:31,dl_dst=00:00:00:00:20:32 actions=output:3
+arista2: 1,in_port=4,dl_vlan=10,dl_src=00:00:00:00:10:11,dl_dst=00:00:00:00:10:12 actions=strip_vlan,output:2
+arista2: 1,in_port=4,dl_vlan=20,dl_src=00:00:00:00:20:21,dl_dst=00:00:00:00:20:32 actions=output:3
+arista2: 1,in_port=3,dl_vlan=20,dl_src=00:00:00:00:20:32,dl_dst=00:00:00:00:01:01 actions=output:4
+arista2: 1,in_port=2,vlan_tci=0x0000/0x1fff,dl_src=00:00:00:00:10:12,dl_dst=00:00:00:00:01:01 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:4
+
+===== B. pingall while cisco1-arista2 is down (expect 36/42) =====
+
+*** Ping: testing ping reachability
+inet -> X X X X X X 
+pc1 -> inet pc2 r1 srv1 vm1 vm2 
+pc2 -> inet pc1 r1 srv1 vm1 vm2 
+r1 -> inet pc1 pc2 srv1 vm1 vm2 
+srv1 -> inet pc1 pc2 r1 vm1 vm2 
+vm1 -> inet pc1 pc2 r1 srv1 vm2 
+vm2 -> inet pc1 pc2 r1 srv1 vm1 
+*** Results: 14% dropped (36/42 received)
+
+===== C. RECOVERY: pc2 -> srv1 every 0.1 s, restore cisco1-arista2 after 3 s =====
+80/80 replies, lost 0 (-, ~0.0 s), duplicates 0
+
+===== C. flows using the standby link (expect none: blocked again) =====
+(none)
+
+===== C. pingall after recovery (expect 36/42) =====
+
+*** Ping: testing ping reachability
+inet -> X X X X X X 
+pc1 -> inet pc2 r1 srv1 vm1 vm2 
+pc2 -> inet pc1 r1 srv1 vm1 vm2 
+r1 -> inet pc1 pc2 srv1 vm1 vm2 
+srv1 -> inet pc1 pc2 r1 vm1 vm2 
+vm1 -> inet pc1 pc2 r1 srv1 vm2 
+vm2 -> inet pc1 pc2 r1 srv1 vm1 
+*** Results: 14% dropped (36/42 received)
+
+===== D. other side: pc1 -> srv1, cut cisco1-arista1 =====
+80/80 replies, lost 0 (-, ~0.0 s), duplicates 0
+
+===== D. restore cisco1-arista1 =====
+80/80 replies, lost 0 (-, ~0.0 s), duplicates 0
+
+===== E. LIMIT: pc1 -> srv1, cut cisco1-hp1 (no backup; expect loss until restored) =====
+30/80 replies, lost 50 (seq 31-80, ~5.0 s), duplicates 0
+
+===== E. pingall after restoring cisco1-hp1 (expect 36/42) =====
+
+*** Ping: testing ping reachability
+inet -> X X X X X X 
+pc1 -> inet pc2 r1 srv1 vm1 vm2 
+pc2 -> inet pc1 r1 srv1 vm1 vm2 
+r1 -> inet pc1 pc2 srv1 vm1 vm2 
+srv1 -> inet pc1 pc2 r1 vm1 vm2 
+vm1 -> inet pc1 pc2 r1 srv1 vm2 
+vm2 -> inet pc1 pc2 r1 srv1 vm1 
+*** Results: 14% dropped (36/42 received)
+*** Stopping 0 controllers
+
+*** Stopping 13 links
+.............
+*** Stopping 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Stopping 7 hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Done

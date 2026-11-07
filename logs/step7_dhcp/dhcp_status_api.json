@@ -1,0 +1,81 @@
+{
+  "enabled": true,
+  "stats": {
+    "forwarded_hops": 2,
+    "unicast_rewrites_at_edge": 2,
+    "total_requests": 4
+  },
+  "router_port": 1,
+  "recent_packets": [
+    {
+      "time": "06:01:34",
+      "orig_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "in_role": "trunk",
+      "xid": "0x6ec6584f",
+      "msg_type": "REQUEST",
+      "switch": "cisco1",
+      "dpid": 1,
+      "out_port": 1,
+      "rewritten_at_edge": false,
+      "in_port": 3,
+      "vlan": 10,
+      "out_role": "trunk",
+      "new_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "client_mac": "00:00:00:00:10:12"
+    },
+    {
+      "time": "06:01:34",
+      "orig_dst": "ff:ff:ff:ff:ff:ff / 255.255.255.255",
+      "in_role": "access",
+      "xid": "0x6ec6584f",
+      "msg_type": "REQUEST",
+      "switch": "arista2",
+      "dpid": 12,
+      "out_port": 1,
+      "rewritten_at_edge": true,
+      "in_port": 2,
+      "vlan": 10,
+      "out_role": "trunk",
+      "new_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "client_mac": "00:00:00:00:10:12"
+    },
+    {
+      "time": "06:01:34",
+      "orig_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "in_role": "trunk",
+      "xid": "0x6ec6584f",
+      "msg_type": "DISCOVER",
+      "switch": "cisco1",
+      "dpid": 1,
+      "out_port": 1,
+      "rewritten_at_edge": false,
+      "in_port": 3,
+      "vlan": 10,
+      "out_role": "trunk",
+      "new_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "client_mac": "00:00:00:00:10:12"
+    },
+    {
+      "time": "06:01:34",
+      "orig_dst": "ff:ff:ff:ff:ff:ff / 255.255.255.255",
+      "in_role": "access",
+      "xid": "0x6ec6584f",
+      "msg_type": "DISCOVER",
+      "switch": "arista2",
+      "dpid": 12,
+      "out_port": 1,
+      "rewritten_at_edge": true,
+      "in_port": 2,
+      "vlan": 10,
+      "out_role": "trunk",
+      "new_dst": "00:00:00:00:01:01 / 255.255.255.255",
+      "client_mac": "00:00:00:00:10:12"
+    }
+  ],
+  "vlan_gateways": {
+    "10": "10.10.10.1",
+    "20": "10.10.20.1"
+  },
+  "router_dpid": 1,
+  "router_mac": "00:00:00:00:01:01"
+}

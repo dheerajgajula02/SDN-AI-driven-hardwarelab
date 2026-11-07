@@ -1,0 +1,12 @@
+NSOT: /home/sdn/lab9/part_a/nsot.json (6 switches)
+
+== verify ==
+  switch   dpid  protocols    fail_mode  controller                 ctl sees   result
+  cisco1   None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+  arista1  None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+  arista2  None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+  hp1      None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+  ovs1     None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+  ovs2     None                                                     NO         WRONG: controller, protocols, fail_mode, dpid
+
+RESULT: PROBLEMS, see above

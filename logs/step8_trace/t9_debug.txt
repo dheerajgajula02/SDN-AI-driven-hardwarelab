@@ -1,0 +1,9 @@
+round 1 ping: ['3 packets transmitted, 3 received, 0% packet loss, time 402ms']
+  arista2 learned rules: in_port=4 dl_dst=00:00:00:00:10:12 actions=strip_vlan,output:2 || in_port=2 dl_dst=00:00:00:00:01:01 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:4
+  trace: arista2 (dpid 12)  in 2 -> out 4  (standby link) | arista1 (dpid 11)  in 4 -> out 1
+round 2 ping: ['3 packets transmitted, 3 received, 0% packet loss, time 400ms']
+  arista2 learned rules: in_port=4 dl_dst=00:00:00:00:10:12 actions=strip_vlan,output:2 || in_port=2 dl_dst=00:00:00:00:01:01 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:4
+  trace: arista2 (dpid 12)  in 2 -> out 4  (standby link) | arista1 (dpid 11)  in 4 -> out 1
+round 3 ping: ['3 packets transmitted, 3 received, 0% packet loss, time 400ms']
+  arista2 learned rules: in_port=4 dl_dst=00:00:00:00:10:12 actions=strip_vlan,output:2 || in_port=2 dl_dst=00:00:00:00:01:01 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:4
+  trace: arista2 (dpid 12)  in 2 -> out 4  (standby link) | arista1 (dpid 11)  in 4 -> out 1

@@ -1,0 +1,252 @@
+loading app part_a/vlan_switch_13.py
+loading app ryu.app.ofctl_rest
+loading app ryu.controller.ofp_handler
+creating context wsgi
+instantiating app None of DPSet
+creating context dpset
+instantiating app part_a/vlan_switch_13.py of VlanSwitch13
+loaded 6 switches from /home/sdn/lab9/part_a/nsot.json
+6 switch links, blocked ports: [(11, 4), (12, 4)]
+instantiating app ryu.controller.ofp_handler of OFPHandler
+instantiating app ryu.app.ofctl_rest of RestStatsApi
+(29068) wsgi starting up on http://0.0.0.0:8080
+(29068) accepted ('100.96.78.56', 48232)
+100.96.78.56 - - [06/Nov/2026 17:05:09] "GET /stats/switches HTTP/1.1" 200 133 0.007052
+switch 1 connected, table-miss rule installed
+switch 11 connected, table-miss rule installed
+switch 12 connected, table-miss rule installed
+switch 21 connected, table-miss rule installed
+switch 31 connected, table-miss rule installed
+switch 32 connected, table-miss rule installed
+(29068) accepted ('127.0.0.1', 54726)
+127.0.0.1 - - [06/Nov/2026 17:05:37] "GET /stats/switches HTTP/1.1" 200 150 0.000323
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:10:11 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=12 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 2
+flow: dpid=21 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=21 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 2
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=11 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 3
+flow: dpid=31 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=12 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=32 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 1
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:20:21 -> port 1
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:20:21 -> port 1
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:20:31 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:20:31 -> port 1
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:32 -> port 3
+port 1:3 is DOWN
+topology change: blocked ports [(11, 4), (12, 4)] -> none
+port 12:1 is DOWN
+port 12:1 is DOWN
+flow: dpid=21 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 2
+flow: dpid=11 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 4
+flow: dpid=12 vlan=10 in_port=4 dst=00:00:00:00:10:12 -> port 2
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 4
+flow: dpid=11 vlan=10 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=21 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 4
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 4
+flow: dpid=11 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=11 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 4
+flow: dpid=12 vlan=20 in_port=4 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=32 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 3
+flow: dpid=31 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:20:31 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:20:31 -> port 4
+flow: dpid=11 vlan=20 in_port=4 dst=00:00:00:00:20:31 -> port 3
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:20:32 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:20:32 -> port 4
+flow: dpid=11 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=4 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+port 1:3 is DOWN
+port 12:1 is DOWN
+port 12:1 is up
+port 1:3 is up
+topology change: blocked ports none -> [(11, 4), (12, 4)]
+flow: dpid=21 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=12 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 2
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=21 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 2
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 1
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=11 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 3
+flow: dpid=31 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=12 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=32 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:31 -> port 2
+port 1:2 is DOWN
+topology change: blocked ports [(11, 4), (12, 4)] -> none
+port 11:1 is DOWN
+port 11:1 is DOWN
+flow: dpid=21 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 3
+flow: dpid=12 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 4
+flow: dpid=11 vlan=10 in_port=4 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 4
+flow: dpid=12 vlan=10 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=21 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 2
+(29068) accepted ('100.96.78.56', 47720)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/switches HTTP/1.1" 200 155 0.000314
+(29068) accepted ('100.96.78.56', 47730)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/32 HTTP/1.1" 200 387 0.001799
+(29068) accepted ('100.96.78.56', 47746)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/1 HTTP/1.1" 200 1575 0.003986
+(29068) accepted ('100.96.78.56', 47754)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/21 HTTP/1.1" 200 1042 0.002896
+(29068) accepted ('100.96.78.56', 47760)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/11 HTTP/1.1" 200 1043 0.003284
+(29068) accepted ('100.96.78.56', 47770)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/12 HTTP/1.1" 200 979 0.002953
+(29068) accepted ('100.96.78.56', 47778)
+100.96.78.56 - - [06/Nov/2026 17:06:09] "GET /stats/flow/31 HTTP/1.1" 200 385 0.001773
+port 1:2 is DOWN
+port 1:2 is up
+port 11:1 is up
+topology change: blocked ports none -> [(11, 4), (12, 4)]
+flow: dpid=21 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=1 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=11 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=21 vlan=20 in_port=1 dst=00:00:00:00:20:21 -> port 2
+port 1:4 is DOWN
+port 21:1 is DOWN
+port 21:1 is DOWN
+port 1:4 is DOWN
+port 1:4 is up
+port 21:1 is up
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:10:11 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:10:11 -> port 2
+flow: dpid=31 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=11 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=32 vlan=20 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=12 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=3 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=12 vlan=10 in_port=1 dst=00:00:00:00:10:12 -> port 2
+flow: dpid=1 vlan=10 in_port=2 dst=00:00:00:00:10:12 -> port 3
+flow: dpid=12 vlan=10 in_port=2 dst=00:00:00:00:01:01 -> port 1
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=11 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 3
+flow: dpid=31 vlan=20 in_port=1 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=12 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=32 vlan=20 in_port=1 dst=00:00:00:00:20:32 -> port 2
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:31 -> port 2
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=4 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:21 -> port 4
+flow: dpid=1 vlan=20 in_port=2 dst=00:00:00:00:20:32 -> port 3
+flow: dpid=1 vlan=20 in_port=3 dst=00:00:00:00:20:31 -> port 2
+port 11:4 is DOWN
+topology change: blocked ports [(11, 4), (12, 4)] -> none
+port 11:4 is DOWN
+port 12:4 is DOWN
+port 12:4 is DOWN
+port 11:1 is DOWN
+port 1:2 is DOWN
+port 11:1 is DOWN
+port 1:2 is DOWN
+port 11:3 is DOWN
+port 11:3 is DOWN
+port 31:1 is DOWN
+port 12:1 is DOWN
+port 1:3 is DOWN
+port 12:1 is DOWN
+port 1:3 is DOWN
+port 12:3 is DOWN
+port 12:3 is DOWN
+port 32:1 is DOWN
+port 1:4 is DOWN
+port 1:4 is DOWN
+port 21:1 is DOWN
+port 21:1 is DOWN
+port 11:2 is DOWN
+port 11:2 is DOWN
+port 12:2 is DOWN
+port 12:2 is DOWN
+port 1:1 is DOWN
+port 1:1 is DOWN
+port 21:2 is DOWN
+port 21:2 is DOWN
+port 31:2 is DOWN
+port 31:2 is DOWN
+port 32:2 is DOWN
+port 32:2 is DOWN
+switch 1 disconnected
+switch 31 disconnected
+switch 11 disconnected
+switch 12 disconnected
+switch 21 disconnected
+switch 32 disconnected
+(29068) accepted ('100.96.78.56', 45520)
+100.96.78.56 - - [06/Nov/2026 17:07:08] "GET /stats/switches HTTP/1.1" 200 133 0.000290

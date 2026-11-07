@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 9 controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Tokens. Colours are Ethernet cable pair colours; each one has a meaning:
+     green  = allowed            orange = blocked
+     blue   = rewritten/unicast  dotted grey = still a broadcast
+   ========================================================================== */
+:root {
+  --rack:   #1B1F26;   /* page */
+  --face:   #232933;   /* raised: top bar, side column */
+  --groove: #343C48;   /* rules, borders */
+  --text:   #E6E9EE;
+  --dim:    #9AA4B2;
+  --green:  #6CC687;
+  --orange: #F2994A;
+  --blue:   #6AA6F0;
+
+  --font: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --code: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+
+  /* type scale, ratio 1.25 from 16px */
+  --s-small: 0.8125rem;
+  --s-body:  1rem;
+  --s-h3:    1.125rem;
+  --s-h2:    1.625rem;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--rack); color: var(--text); }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--s-body);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
+
+/* ---- Top bar: title + switch faceplate --------------------------------- */
+.bar {
+  display: flex; flex-wrap: wrap; gap: 1rem 2rem;
+  align-items: center; justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--face);
+  border-bottom: 1px solid var(--groove);
+}
+.bar h1 { font-size: 1.25rem; font-weight: 700; }
+.bar .where { color: var(--dim); font-size: var(--s-small); margin-top: 0.15rem; }
+
+.faceplate {
+  display: flex; list-style: none; margin: 0; padding: 0;
+  border: 1px solid var(--groove); border-radius: 6px; background: var(--rack);
+}
+.jack {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 0.45rem;
+  align-items: center; padding: 0.4rem 0.75rem;
+  border-left: 1px solid var(--groove);
+}
+.jack:first-child { border-left: 0; }
+.led {
+  grid-row: span 2; width: 0.55rem; height: 0.55rem; border-radius: 50%;
+  border: 2px solid var(--orange);
+}
+.jack.up .led { background: var(--green); border-color: var(--green); }
+.jack b { font-size: var(--s-small); font-weight: 600; }
+.jack span { font-size: 0.75rem; color: var(--dim); }
+
+/* ---- Tabs -------------------------------------------------------------- */
+.tabs {
+  display: flex; gap: 0.25rem; padding: 0 2rem;
+  border-bottom: 1px solid var(--groove);
+}
+.tab {
+  font: inherit; font-weight: 600; color: var(--dim);
+  background: none; border: 0; cursor: pointer;
+  padding: 0.85rem 0.9rem 0.7rem;
+  border-bottom: 3px solid transparent;
+}
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+.tab:hover { color: var(--text); }
+
+/* ---- App layout: feed + side column ------------------------------------ */
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-height: calc(100vh - 8.5rem); }
+.app[hidden] { display: none; }
+.main { padding: 2rem 2rem 3rem; }
+.side { background: var(--face); border-left: 1px solid var(--groove); padding: 2rem 1.5rem 3rem; }
+
+.intro h2 { font-size: var(--s-h2); font-weight: 700; }
+.intro p { color: var(--dim); max-width: 64ch; margin-top: 0.5rem; }
+.state {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem;
+  margin-top: 1.25rem;
+}
+.state .now { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+.state .now .led { grid-row: auto; }
+.state .now.on .led { background: var(--green); border-color: var(--green); }
+.counts { color: var(--dim); }
+.counts strong { color: var(--text); font-weight: 600; }
+.counts .ok { color: var(--green); }
+.counts .no { color: var(--orange); }
+
+/* ---- Buttons and inputs ------------------------------------------------ */
+.btn {
+  font: inherit; font-weight: 600; font-size: 0.9375rem; color: var(--text);
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 4px;
+  padding: 0.45rem 0.9rem; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--dim); }
+.btn.quiet { background: none; border-color: transparent; color: var(--dim); padding-inline: 0.4rem; }
+.btn.quiet:hover { color: var(--text); }
+input[type=text] {
+  font: inherit; color: var(--text); width: 100%; min-width: 0;
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 4px;
+  padding: 0.45rem 0.65rem;
+}
+input[type=text]::placeholder { color: #6E7887; }
+
+/* ---- Feed -------------------------------------------------------------- */
+.feed-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 2.5rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--groove);
+}
+.feed-head h3 { font-size: var(--s-h3); font-weight: 700; }
+.feed { list-style: none; margin: 0; padding: 0; }
+.row {
+  display: grid; grid-template-columns: 4.75rem minmax(0, 1.15fr) minmax(0, 1.35fr);
+  gap: 0.25rem 1.25rem; padding: 0.9rem 0; border-bottom: 1px solid var(--groove);
+}
+.row time { color: var(--dim); font-size: var(--s-small); padding-top: 0.15rem; }
+.subject b { display: block; font-size: 1.0625rem; font-weight: 600; overflow-wrap: anywhere; }
+.subject .q { color: var(--dim); font-weight: 400; font-size: var(--s-small); }
+.subject span { display: block; color: var(--dim); font-size: var(--s-small); margin-top: 0.15rem; }
+.subject .q { display: inline; margin: 0 0 0 0.4rem; }
+.outcome strong { display: block; font-weight: 600; margin-top: 0.45rem; }
+.outcome > span:not(.wire) { display: block; color: var(--dim); font-size: var(--s-small); }
+.good .outcome strong { color: var(--green); }
+.bad  .outcome strong { color: var(--orange); }
+
+/* The wire: a conductor in its pair colour, twisted with white stripes.
+   Blocked = the wire ends cut. */
+.wire {
+  --c: var(--green);
+  position: relative; display: block; height: 4px; width: min(100%, 11rem); border-radius: 2px;
+  margin-top: 0.55rem;
+  background: repeating-linear-gradient(90deg, var(--c) 0 13px, color-mix(in srgb, var(--c) 30%, #fff) 13px 17px);
+}
+.bad .wire { --c: var(--orange); width: min(62%, 6.5rem); }
+.bad .wire::after {
+  content: ""; position: absolute; right: -0.55rem; top: -0.4rem;
+  width: 2px; height: 1.1rem; background: var(--orange); transform: rotate(28deg);
+}
+
+/* DHCP path: hosts and switches joined by wire */
+.path { display: flex; flex-wrap: wrap; align-items: center; row-gap: 0.4rem; }
+.node {
+  padding: 0.15rem 0.55rem; border: 1px solid var(--groove); border-radius: 4px;
+  background: var(--face); font-weight: 600; font-size: 0.9375rem; white-space: nowrap;
+}
+.node small { color: var(--dim); font-weight: 400; margin-left: 0.3rem; font-size: var(--s-small); }
+.node.end { border-color: var(--blue); }
+.link {
+  --c: var(--blue); width: 1.6rem; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--c) 0 8px, color-mix(in srgb, var(--c) 30%, #fff) 8px 11px);
+}
+/* host -> edge switch: the frame is still a broadcast, so a dotted grey line */
+.link.flood { background: repeating-linear-gradient(90deg, var(--dim) 0 3px, transparent 3px 7px); }
+.change { color: var(--dim); font-size: var(--s-small); margin-top: 0.55rem; }
+.change em { font-style: normal; color: var(--text); }
+
+.empty { padding: 2rem 0; color: var(--dim); max-width: 60ch; }
+.empty code, .side code {
+  font-family: var(--code); font-size: 0.875rem; color: var(--text);
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 3px; padding: 0.05rem 0.35rem;
+}
+
+/* A row that just arrived glows once in its colour (skipped if the user
+   prefers reduced motion). */
+@keyframes arrive { from { background: color-mix(in srgb, var(--glow) 16%, transparent); } to { background: transparent; } }
+.row.new { --glow: var(--green); animation: arrive 1.6s ease-out; }
+.row.new.bad  { --glow: var(--orange); }
+.row.new.dhcp { --glow: var(--blue); }
+@media (prefers-reduced-motion: reduce) { .row.new { animation: none; } }
+
+/* ---- Side column ------------------------------------------------------- */
+.side section + section { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--groove); }
+.side h3 { font-size: var(--s-h3); font-weight: 700; }
+.side p { color: var(--dim); font-size: 0.9375rem; margin-top: 0.4rem; }
+.side form { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
+.blocklist { list-style: none; margin: 0.9rem 0 0; padding: 0; }
+.blocklist li {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding: 0.3rem 0; border-bottom: 1px solid var(--groove); overflow-wrap: anywhere;
+}
+.blocklist li:last-child { border-bottom: 0; }
+.verdict { margin-top: 0.85rem; font-size: 0.9375rem; }
+.verdict.good { color: var(--green); }
+.verdict.bad { color: var(--orange); }
+.verdict span { display: block; color: var(--dim); font-size: var(--s-small); }
+dl.facts { margin: 0.85rem 0 0; display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; font-size: 0.9375rem; }
+dl.facts dt { color: var(--dim); }
+dl.facts dd { margin: 0; overflow-wrap: anywhere; }
+pre.cmd {
+  font-family: var(--code); font-size: 0.8125rem; line-height: 1.45; white-space: pre-wrap; word-break: break-all;
+  margin: 0.85rem 0 0; padding: 0.65rem 0.75rem; color: var(--text);
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 4px;
+}
+
+/* status line for actions (read out by screen readers) */
+.notice { min-height: 1.5rem; margin-top: 1.5rem; font-size: var(--s-small); color: var(--dim); }
+.notice.err { color: var(--orange); }
+
+/* ---- How it works: map + step panel ------------------------------------- */
+.app.how { grid-template-columns: minmax(0, 1fr) 25rem; }
+.scenarios-wrap { margin-top: 1.25rem; }
+.scenarios-wrap .btn[aria-checked="true"] { border-color: var(--text); background: var(--face); }
+.stage { margin-top: 1rem; border: 1px solid var(--groove); border-radius: 6px; padding: 0.25rem; }
+.topo { display: block; width: 100%; height: auto; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; list-style: none; padding: 0; margin: 0.85rem 0 0;
+          color: var(--dim); font-size: var(--s-small); }
+.legend li { display: flex; align-items: center; gap: 0.4rem; }
+.legend .sw { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--c); }
+.legend .ln { width: 1.4rem; border-top: 2px dotted var(--dim); }
+.legend .ring { width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 3px solid var(--text); }
+.scen-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.scen-row + .scen-row { margin-top: 0.5rem; }
+.scen-row .group { width: 12.5rem; color: var(--dim); font-size: var(--s-small); }
+.topo .dot.cursor { fill: var(--rack); stroke: var(--tone); stroke-width: 3.5; }
+.tone-trace { --tone: var(--text); }
+#how-trace-out, #trace-out { white-space: pre; word-break: normal; overflow-x: auto; }
+#trace-out:empty { display: none; }
+.trace-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; margin-top: 1.25rem; }
+.trace-form label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--dim); font-size: var(--s-small); }
+.trace-form select {
+  font: inherit; font-size: var(--s-body); color: var(--text); min-width: 11rem;
+  background: var(--rack); border: 1px solid var(--groove); border-radius: 4px; padding: 0.42rem 0.55rem;
+}
+ol.rules { margin: 0.75rem 0 0; padding-left: 1.4rem; font-size: 0.9375rem; }
+ol.rules li { margin-bottom: 0.6rem; }
+ol.rules li span { display: block; color: var(--dim); font-size: var(--s-small); overflow-wrap: anywhere; }
+ol.rules li.stop b { color: var(--orange); }
+#trace-head.ok { color: var(--green); }
+#trace-head.stopped { color: var(--orange); }
+#how-trace-out .now { color: var(--blue); }
+
+/* map: links */
+.topo .l { stroke: var(--groove); stroke-width: 2; }
+.topo .l.trunk { stroke-width: 4; }
+.topo .l.standby { stroke-dasharray: 7 6; }
+.topo .l.standby.open { stroke-dasharray: none; }
+.topo .l.on { stroke: var(--tone); }
+.topo .ctl { stroke: var(--text); stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; opacity: 0; }
+.topo .ctl.on { opacity: 0.9; }
+.topo .ghost { stroke: var(--dim); stroke-width: 2; stroke-dasharray: 2 5; }
+.topo .ghost-x { stroke: var(--orange); stroke-width: 2.5; stroke-linecap: round; }
+.topo .cut { stroke: var(--orange); stroke-width: 3.5; stroke-linecap: round; }
+.topo .port { fill: var(--dim); font-size: 11px; text-anchor: middle; }
+.topo .note { fill: var(--dim); font-size: 11px; text-anchor: middle; }
+.topo .band rect { fill: var(--face); stroke: var(--groove); stroke-dasharray: 4 4; }
+.topo .band text { fill: var(--dim); font-size: 12px; }
+
+/* map: devices */
+.topo .n rect { fill: var(--face); stroke: var(--groove); stroke-width: 1.5; }
+.topo .n.switch rect { stroke: #4A5361; }
+.topo .n .name { fill: var(--text); font-size: 14px; font-weight: 700; text-anchor: middle; }
+.topo .n .sub { fill: var(--dim); font-size: 11px; text-anchor: middle; }
+.topo .n.active rect { stroke: var(--tone); stroke-width: 3; }
+.topo .n.unreached rect { stroke-dasharray: 4 3; opacity: 0.6; }
+.topo .n.unreached .sub { fill: var(--orange); }
+
+/* map: the packet */
+.topo .dot { fill: var(--tone); stroke: var(--rack); stroke-width: 2.5; }
+.tone-neutral { --tone: var(--text); }
+.tone-good    { --tone: var(--green); }
+.tone-bad     { --tone: var(--orange); }
+.tone-uni     { --tone: var(--blue); }
+.tone-bcast   { --tone: var(--dim); }
+
+/* step panel */
+.step-title { font-size: 1.25rem; margin-top: 0.35rem; }
+.side .step-text { color: var(--text); font-size: 1.0625rem; line-height: 1.55; min-height: 8em; margin-top: 0.6rem; }
+.controls { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.controls + section { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--groove); }
+.controls .btn { flex: 1; }
+.controls .btn:disabled { opacity: 0.4; cursor: default; }
+dl.pkt { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.9rem; margin: 0.85rem 0 0; font-size: 0.9375rem; }
+dl.pkt dt { color: var(--dim); }
+dl.pkt dd { margin: 0; overflow-wrap: anywhere; }
+dl.pkt .chg { color: var(--blue); font-weight: 600; }
+.steplist { margin: 0.75rem 0 0; padding-left: 1.6rem; color: var(--dim); }
+.steplist li { margin: 0.15rem 0; }
+.steplist button { font: inherit; font-size: 0.9375rem; color: var(--dim); background: none; border: 0; padding: 0.15rem 0; cursor: pointer; text-align: left; }
+.steplist button:hover { color: var(--text); }
+.steplist li[aria-current="step"] { color: var(--text); }
+.steplist li[aria-current="step"] button { color: var(--text); font-weight: 600; }
+
+/* ---- Small screens ----------------------------------------------------- */
+@media (max-width: 960px) {
+  .app, .app.how { grid-template-columns: 1fr; }
+  .side { border-left: 0; border-top: 1px solid var(--groove); }
+}
+@media (max-width: 640px) {
+  .bar, .tabs { padding-inline: 1rem; }
+  .main { padding: 1.5rem 1rem 2rem; }
+  .row { grid-template-columns: 1fr; }
+  .faceplate { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div>
+    <h1>Lab 9 controller</h1>
+    <p class="where" id="where">Ryu, OpenFlow 1.3</p>
+  </div>
+  <ul class="faceplate" id="faceplate" aria-label="Switches"></ul>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Controller apps">
+  <button class="tab" role="tab" id="tab-dns"  aria-controls="app-dns"  data-app="dns">DNS filter</button>
+  <button class="tab" role="tab" id="tab-dhcp" aria-controls="app-dhcp" data-app="dhcp">DHCP to router</button>
+  <button class="tab" role="tab" id="tab-trace" aria-controls="app-trace" data-app="trace">Path trace</button>
+  <button class="tab" role="tab" id="tab-how"  aria-controls="app-how"  data-app="how">How it works</button>
+</nav>
+
+<!-- ======================= DNS filter (A3) ======================= -->
+<div class="app" id="app-dns" role="tabpanel" aria-labelledby="tab-dns" hidden>
+  <main class="main">
+    <div class="intro">
+      <h2>DNS filter</h2>
+      <p>Every DNS lookup is sent to the controller at the first switch it enters. The controller
+         checks the domain, then either lets the lookup through to the router or answers it
+         itself with the blocked page.</p>
+      <div class="state">
+        <span class="now" id="dns-now"><span class="led"></span><span></span></span>
+        <button class="btn" id="dns-toggle" type="button"></button>
+        <span class="counts" id="dns-counts"></span>
+        <button class="btn quiet" type="button" data-how="dns-bad">Watch a lookup hop by hop</button>
+      </div>
+    </div>
+
+    <div class="feed-head">
+      <h3>Recent lookups</h3>
+      <button class="btn quiet" id="dns-clear" type="button">Clear history</button>
+    </div>
+    <ul class="feed" id="dns-feed"></ul>
+  </main>
+
+  <aside class="side">
+    <section>
+      <h3>Blocklist</h3>
+      <p>Domains on this list, and their subdomains, get the blocked page.</p>
+      <form id="block-form">
+        <input type="text" id="block-input" placeholder="example.com" autocomplete="off" spellcheck="false" aria-label="Domain to block">
+        <button class="btn" type="submit">Block domain</button>
+      </form>
+      <ul class="blocklist" id="blocklist"></ul>
+    </section>
+
+    <section>
+      <h3>Check a domain</h3>
+      <p>Asks the verdict service what would happen, without sending any traffic.</p>
+      <form id="check-form">
+        <input type="text" id="check-input" placeholder="phishing.testcategory.com" autocomplete="off" spellcheck="false" aria-label="Domain to check">
+        <button class="btn" type="submit">Check</button>
+      </form>
+      <div class="verdict" id="check-out" aria-live="polite"></div>
+    </section>
+
+    <section>
+      <h3>Settings</h3>
+      <dl class="facts">
+        <dt>Blocked page</dt><dd id="dns-page">-</dd>
+        <dt>Verdict service</dt><dd id="dns-service">-</dd>
+      </dl>
+    </section>
+    <p class="notice" id="dns-notice" role="status"></p>
+  </aside>
+</div>
+
+<!-- ======================= DHCP to router (A4) ======================= -->
+<div class="app" id="app-dhcp" role="tabpanel" aria-labelledby="tab-dhcp" hidden>
+  <main class="main">
+    <div class="intro">
+      <h2>DHCP to router</h2>
+      <p>When a host asks for an address, its broadcast is caught at the first switch, readdressed
+         to the router's MAC, and sent up one path to the router. No other host receives it.</p>
+      <div class="state">
+        <span class="now" id="dhcp-now"><span class="led"></span><span></span></span>
+        <button class="btn" id="dhcp-toggle" type="button"></button>
+        <span class="counts" id="dhcp-counts"></span>
+        <button class="btn quiet" type="button" data-how="dhcp">Watch a request hop by hop</button>
+      </div>
+    </div>
+
+    <div class="feed-head">
+      <h3>Recent requests</h3>
+      <button class="btn quiet" id="dhcp-clear" type="button">Clear history</button>
+    </div>
+    <ul class="feed" id="dhcp-feed"></ul>
+  </main>
+
+  <aside class="side">
+    <section>
+      <h3>Where requests go</h3>
+      <dl class="facts">
+        <dt>Router</dt><dd id="dhcp-router">-</dd>
+        <dt>Router MAC</dt><dd id="dhcp-mac">-</dd>
+        <dt>Gateways</dt><dd id="dhcp-gw">-</dd>
+      </dl>
+    </section>
+    <section>
+      <h3>Try it</h3>
+      <p>At the <code>mininet&gt;</code> prompt, have pc2 ask for a new address:</p>
+      <pre class="cmd">pc2 busybox udhcpc -i pc2-eth0 -n -q -t 3 -s /tmp/lab9-udhcpc.sh</pre>
+    </section>
+    <p class="notice" id="dhcp-notice" role="status"></p>
+  </aside>
+</div>
+
+<!-- ======================= Path trace (A5) ======================= -->
+<div class="app how" id="app-trace" role="tabpanel" aria-labelledby="tab-trace" hidden>
+  <main class="main">
+    <div class="intro">
+      <h2>Path trace</h2>
+      <p>Pick two hosts. The trace reads each switch's real flow table through the controller and
+         follows the rules hop by hop: every switch's DPID with its in and out port, plus the router.
+         No packet is sent and nothing is installed.</p>
+      <form class="trace-form" id="trace-form">
+        <label>From <select id="trace-src"></select></label>
+        <label>To <select id="trace-dst"></select></label>
+        <button class="btn" type="submit">Trace path</button>
+        <button class="btn quiet" type="button" data-how="trace">How does the trace work?</button>
+      </form>
+    </div>
+    <div class="stage">
+      <svg id="trace-svg" class="topo" role="img" aria-label="Network map with the traced path"></svg>
+    </div>
+  </main>
+
+  <aside class="side">
+    <section>
+      <h3 id="trace-head">No trace yet</h3>
+      <p id="trace-summary">Choose two hosts and press Trace path.</p>
+      <pre class="cmd" id="trace-out"></pre>
+    </section>
+    <section>
+      <h3>Rules it matched</h3>
+      <p>Read from each switch just now, with how many packets have used each rule so far.</p>
+      <ol class="rules" id="trace-rules"></ol>
+    </section>
+    <p class="notice" id="trace-notice" role="status"></p>
+  </aside>
+</div>
+
+<!-- ======================= How it works (hop-by-hop map) ======================= -->
+<div class="app how" id="app-how" role="tabpanel" aria-labelledby="tab-how" hidden>
+  <main class="main">
+    <div class="intro">
+      <h2>How it works, hop by hop</h2>
+      <p>Pick a situation and follow one packet through the network. Each step shows which device
+         acts, what it decides, and how the packet's addresses change. The map is drawn from the
+         NSOT, so it is the network the controller is running.</p>
+    </div>
+    <div class="scenarios-wrap" id="how-scenarios" role="radiogroup" aria-label="Situation"></div>
+    <div class="stage">
+      <svg id="how-svg" class="topo" role="img" aria-label="Network map with the packet's position"></svg>
+    </div>
+    <ul class="legend" aria-label="What the colours mean">
+      <li><span class="sw" style="--c: var(--text)"></span>a lookup or request</li>
+      <li><span class="sw" style="--c: var(--green)"></span>allowed answer</li>
+      <li><span class="sw" style="--c: var(--orange)"></span>blocked or fake answer</li>
+      <li><span class="sw" style="--c: var(--blue)"></span>unicast to the router</li>
+      <li><span class="sw" style="--c: var(--dim)"></span>broadcast</li>
+      <li><span class="ln"></span>dotted lines: management network to the controller</li>
+      <li><span class="ring"></span>hollow ring: where the trace app is reading (no packet is sent)</li>
+    </ul>
+  </main>
+
+  <aside class="side">
+    <p class="counts" id="how-count"></p>
+    <h3 id="how-title" class="step-title"></h3>
+    <p class="step-text" id="how-text" aria-live="polite"></p>
+    <div class="controls">
+      <button class="btn" id="how-back" type="button">Back</button>
+      <button class="btn" id="how-play" type="button">Play</button>
+      <button class="btn" id="how-next" type="button">Next</button>
+    </div>
+
+    <section id="how-trace" hidden>
+      <h3>Trace output</h3>
+      <p>What the trace prints, one line per hop, as it goes.</p>
+      <pre class="cmd" id="how-trace-out"></pre>
+    </section>
+
+    <section>
+      <h3 id="how-pkt-title">The packet at this step</h3>
+      <p>Blue values changed at this step.</p>
+      <dl class="pkt" id="how-pkt"></dl>
+    </section>
+
+    <section>
+      <h3>All steps</h3>
+      <ol class="steplist" id="how-steps"></ol>
+    </section>
+  </aside>
+</div>
+
+<script>
+/* Served by Ryu, the page talks to its own origin. Opened as a file, it talks
+   to the controller over Tailscale. */
+const API = location.protocol.startsWith('http') ? '' : 'http://100.110.3.67:8080';
+
+let names = { switches: {}, hosts_by_ip: {}, hosts_by_mac: {}, router: 'r1', controller: '' };
+let current = 'dns';
+let routerDpid = null, routerPort = null;
+const seen = { dns: null, dhcp: null };   // row keys already shown (null = first load)
+const state = { dnsEnabled: true, dhcpEnabled: true };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const swName = dpid => names.switches[String(dpid)] || ('switch ' + dpid);
+const hostByIp = ip => names.hosts_by_ip[ip];
+const hostByMac = mac => names.hosts_by_mac[(mac || '').toLowerCase()];
+const cap = s => s ? s.charAt(0) + s.slice(1).toLowerCase() : s;
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+async function api(path, opts) {
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error(path + ' returned ' + r.status);
+  return r.json();
+}
+const post = (path, body) => api(path, { method: 'POST', body: JSON.stringify(body) });
+
+function notice(app, text, isError) {
+  const el = $(app + '-notice');
+  el.textContent = text;
+  el.classList.toggle('err', !!isError);
+}
+
+/* ---------------- Tabs ---------------- */
+function showApp(app) {
+  if (app !== 'how' && HOW.playing) { HOW.playing = false; HOW.token++; $('how-play').textContent = 'Play'; }
+  current = app;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.app === app)));
+  document.querySelectorAll('.app').forEach(p => { p.hidden = p.id !== 'app-' + app; });
+  if (location.hash !== '#' + app) history.replaceState(null, '', '#' + app);
+  refresh();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showApp(t.dataset.app)));
+
+/* ---------------- Switch faceplate ---------------- */
+async function loadSwitches() {
+  let up = [];
+  try { up = (await api('/stats/switches')).map(String); } catch (e) { /* show all as not connected */ }
+  const dpids = Object.keys(names.switches).sort((a, b) => a - b);
+  $('faceplate').innerHTML = dpids.map(d => {
+    const on = up.includes(d);
+    return `<li class="jack${on ? ' up' : ''}" title="${on ? 'Connected' : 'Not connected'}">
+      <span class="led" aria-hidden="true"></span><b>${esc(names.switches[d])}</b>
+      <span>${on ? 'dpid ' + d : 'not connected'}</span></li>`;
+  }).join('');
+}
+
+/* ---------------- DNS filter ---------------- */
+function dnsReason(q) {
+  const r = q.reason || '';
+  const rule = (r.match(/\(([^)]+)\)/) || [])[1];
+  if (q.verdict === 'bad') {
+    if (r.startsWith('matched custom')) return 'On your blocklist' + (rule && rule !== q.domain ? ' as ' + rule : '');
+    if (r.includes('Cloudflare')) return "Flagged by Cloudflare's malware and phishing check";
+    return r;
+  }
+  if (r.includes('Cloudflare')) return "Clean in Cloudflare's check, not on your blocklist";
+  if (r.startsWith('local lab')) return 'Lab test domain, not on your blocklist';
+  if (r.includes('unreachable') || r.includes('offline')) return 'Verdict service unreachable, so it was let through';
+  return r;
+}
+
+function dnsRow(q, isNew, pageIp) {
+  const bad = q.verdict === 'bad';
+  const who = hostByIp(q.src_ip);
+  const kind = q.qtype === 'A' ? '' : `<span class="q">${q.qtype === 'AAAA' ? 'IPv6 lookup' : 'type ' + esc(q.qtype)}</span>`;
+  return `<li class="row ${bad ? 'bad' : 'good'}${isNew ? ' new' : ''}">
+    <time>${esc(q.time)}</time>
+    <div class="subject">
+      <b>${esc(q.domain)}${kind}</b>
+      <span>${esc(who || q.src_ip)}${who ? ' at ' + esc(q.src_ip) : ''}, entered ${esc(swName(q.dpid))} port ${esc(q.in_port)}, VLAN ${esc(q.vlan)}</span>
+    </div>
+    <div class="outcome">
+      <span class="wire" aria-hidden="true"></span>
+      <strong>${bad ? 'Blocked, answered with the blocked page' : 'Allowed, sent on to the router'}</strong>
+      <span>${esc(dnsReason(q))}${bad ? ', points to ' + esc(pageIp) : ''}</span>
+    </div>
+  </li>`;
+}
+
+async function loadDns() {
+  const d = await api('/lab9/dns/status');
+  state.dnsEnabled = d.enabled;
+
+  const now = $('dns-now');
+  now.classList.toggle('on', d.enabled);
+  now.lastElementChild.textContent = d.enabled ? 'Filtering is on' : 'Filtering is off';
+  $('dns-toggle').textContent = d.enabled ? 'Turn filtering off' : 'Turn filtering on';
+
+  const s = d.stats;
+  $('dns-counts').innerHTML = s.total_queries
+    ? `<strong>${plural(s.total_queries, 'lookup', 'lookups')}</strong> checked: <span class="ok">${s.allowed} allowed</span>, <span class="no">${s.blocked} blocked</span>`
+    : 'No lookups checked yet';
+
+  const rows = d.recent_queries || [];
+  const keys = rows.map(q => [q.time, q.src_ip, q.domain, q.qtype, q.dpid].join('|'));
+  $('dns-feed').innerHTML = rows.length
+    ? rows.map((q, i) => dnsRow(q, seen.dns !== null && !seen.dns.has(keys[i]), d.blocked_page_ip)).join('')
+    : `<li class="empty">No lookups yet. At the <code>mininet&gt;</code> prompt, run
+       <code>pc1 dns-test example.com</code> and it shows up here.</li>`;
+  seen.dns = new Set(keys);
+
+  const list = d.blocked_domains || [];
+  $('blocklist').innerHTML = list.length
+    ? list.map(dom => `<li><span>${esc(dom)}</span>
+        <button class="btn quiet" type="button" data-unblock="${esc(dom)}">Unblock</button></li>`).join('')
+    : '<li><span class="counts">Nothing blocked yet. Add a domain above.</span></li>';
+
+  $('dns-page').textContent = d.blocked_page_ip;
+  // Show host:port only (the path is always /check); full URL on hover.
+  let service = d.verdict_url;
+  try { service = new URL(d.verdict_url).host; } catch (e) { /* keep as-is */ }
+  $('dns-service').textContent = service;
+  $('dns-service').title = d.verdict_url;
+}
+
+$('dns-toggle').addEventListener('click', async () => {
+  try {
+    await post('/lab9/dns/config', { enabled: !state.dnsEnabled });
+    notice('dns', state.dnsEnabled ? 'Filtering turned off.' : 'Filtering turned on.');
+    loadDns();
+  } catch (e) { notice('dns', 'Could not change filtering: ' + e.message, true); }
+});
+
+$('dns-clear').addEventListener('click', async () => {
+  try {
+    await post('/lab9/dns/blacklist', { action: 'clear_history' });
+    seen.dns = null;
+    notice('dns', 'History cleared.');
+    loadDns();
+  } catch (e) { notice('dns', 'Could not clear history: ' + e.message, true); }
+});
+
+$('block-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const dom = $('block-input').value.trim().toLowerCase();
+  if (!dom) { notice('dns', 'Type a domain to block, such as example.com.', true); return; }
+  try {
+    await post('/lab9/dns/blacklist', { domain: dom, action: 'add' });
+    $('block-input').value = '';
+    notice('dns', 'Blocked ' + dom + '.');
+    loadDns();
+  } catch (e) { notice('dns', 'Could not block ' + dom + ': ' + e.message, true); }
+});
+
+$('blocklist').addEventListener('click', async ev => {
+  const dom = ev.target.dataset && ev.target.dataset.unblock;
+  if (!dom) return;
+  try {
+    await post('/lab9/dns/blacklist', { domain: dom, action: 'remove' });
+    notice('dns', 'Unblocked ' + dom + '.');
+    loadDns();
+  } catch (e) { notice('dns', 'Could not unblock ' + dom + ': ' + e.message, true); }
+});
+
+$('check-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const dom = $('check-input').value.trim();
+  const out = $('check-out');
+  out.className = 'verdict';
+  if (!dom) { out.textContent = 'Type a domain to check.'; return; }
+  out.textContent = 'Checking ' + dom + '...';
+  try {
+    const r = await api('/lab9/dns/check?domain=' + encodeURIComponent(dom));
+    out.className = 'verdict ' + (r.verdict === 'bad' ? 'bad' : 'good');
+    out.innerHTML = `${esc(r.domain)} would be ${r.verdict === 'bad' ? 'blocked' : 'allowed'}.
+      <span>${esc(dnsReason(r))}</span>`;
+  } catch (e) {
+    out.className = 'verdict bad';
+    out.textContent = 'Could not reach the verdict service: ' + e.message;
+  }
+});
+
+/* ---------------- DHCP to router ---------------- */
+/* The controller logs one entry per switch a request passes through.
+   Group them by transaction + message type into one path per request. */
+function groupDhcp(packets) {
+  const groups = [];
+  const byKey = {};
+  packets.slice().reverse().forEach(p => {             // oldest first
+    const key = p.xid + '|' + p.msg_type;
+    if (!byKey[key]) {
+      byKey[key] = { key, time: p.time, type: p.msg_type, mac: p.client_mac, vlan: p.vlan, hops: [], edge: null };
+      groups.push(byKey[key]);
+    }
+    const g = byKey[key];
+    g.hops.push(p);
+    if (p.rewritten_at_edge) g.edge = p;
+  });
+  return groups.reverse();                              // newest first
+}
+
+function dhcpRow(g, isNew) {
+  const client = hostByMac(g.mac);
+  const last = g.hops[g.hops.length - 1];
+  const reachedRouter = last && last.dpid === routerDpid && last.out_port === routerPort;
+
+  // client --(broadcast, brown)-- edge switch --(unicast, blue)-- ... -- r1
+  const nodes = [`<span class="node">${esc(client || 'client')}</span>`];
+  g.hops.forEach(h => {
+    nodes.push(`<span class="link${h.rewritten_at_edge ? ' flood' : ''}" aria-hidden="true"></span>`);
+    nodes.push(`<span class="node">${esc(h.switch)}<small>${esc(h.in_port)}→${esc(h.out_port)}</small></span>`);
+  });
+  if (reachedRouter) {
+    nodes.push('<span class="link" aria-hidden="true"></span>');
+    nodes.push(`<span class="node end">${esc(names.router || 'router')}</span>`);
+  }
+
+  let change;
+  if (g.edge) {
+    const origMac = g.edge.orig_dst.split(' / ')[0];
+    const [newMac, newIp] = g.edge.new_dst.split(' / ');
+    change = `Broadcast to <em>${esc(origMac)}</em> became unicast to <em>${esc(newMac)}</em> at ${esc(g.edge.switch)}` +
+             (newIp && newIp !== '255.255.255.255' ? `, IP destination set to <em>${esc(newIp)}</em>` : '') + '.';
+  } else {
+    change = 'Arrived already unicast and was passed on toward the router.';
+  }
+
+  return `<li class="row dhcp${isNew ? ' new' : ''}">
+    <time>${esc(g.time)}</time>
+    <div class="subject">
+      <b>${esc(cap(g.type))} from ${esc(client || g.mac)}</b>
+      <span>${esc(g.mac)}, VLAN ${esc(g.vlan)}</span>
+    </div>
+    <div class="outcome">
+      <div class="path" aria-label="Path to the router">${nodes.join('')}</div>
+      <p class="change">${change}</p>
+    </div>
+  </li>`;
+}
+
+async function loadDhcp() {
+  const d = await api('/lab9/dhcp/status');
+  state.dhcpEnabled = d.enabled;
+  routerDpid = d.router_dpid;
+  routerPort = d.router_port;
+
+  const now = $('dhcp-now');
+  now.classList.toggle('on', d.enabled);
+  now.lastElementChild.textContent = d.enabled ? 'Unicast forcing is on' : 'Unicast forcing is off';
+  $('dhcp-toggle').textContent = d.enabled ? 'Turn unicast forcing off' : 'Turn unicast forcing on';
+
+  const groups = groupDhcp(d.recent_packets || []);
+  const edge = d.stats.unicast_rewrites_at_edge;
+  $('dhcp-counts').innerHTML = edge
+    ? `<strong>${plural(edge, 'broadcast', 'broadcasts')}</strong> made unicast at an edge switch`
+    : 'No requests seen yet';
+
+  $('dhcp-feed').innerHTML = groups.length
+    ? groups.map(g => dhcpRow(g, seen.dhcp !== null && !seen.dhcp.has(g.key))).join('')
+    : `<li class="empty">No DHCP requests yet. Run the command under "Try it" and pc2's
+       request shows up here with the path it took.</li>`;
+  seen.dhcp = new Set(groups.map(g => g.key));
+
+  $('dhcp-router').textContent = `${names.router || 'router'} on ${swName(d.router_dpid)} port ${d.router_port}`;
+  $('dhcp-mac').textContent = d.router_mac;
+  $('dhcp-gw').innerHTML = Object.entries(d.vlan_gateways)
+    .map(([v, ip]) => `${esc(ip)} <span class="counts">VLAN ${esc(v)}</span>`).join('<br>');
+}
+
+$('dhcp-toggle').addEventListener('click', async () => {
+  try {
+    await post('/lab9/dhcp/config', { enabled: !state.dhcpEnabled });
+    notice('dhcp', state.dhcpEnabled ? 'Unicast forcing turned off.' : 'Unicast forcing turned on.');
+    loadDhcp();
+  } catch (e) { notice('dhcp', 'Could not change unicast forcing: ' + e.message, true); }
+});
+
+$('dhcp-clear').addEventListener('click', async () => {
+  try {
+    await post('/lab9/dhcp/config', { action: 'clear_history' });
+    seen.dhcp = null;
+    notice('dhcp', 'History cleared.');
+    loadDhcp();
+  } catch (e) { notice('dhcp', 'Could not clear history: ' + e.message, true); }
+});
+
+/* =====================================================================
+   How it works: a hop-by-hop map
+   =====================================================================
+   1. buildMap()      draws the network from the NSOT topology
+   2. switchPath()    finds the switches between two points (same idea as
+                      the controller: shortest path, standby link only if
+                      a cable is cut)
+   3. dnsSteps() / dhcpSteps()  turn a situation into steps:
+        { title, text, hops: [devices the packet travels through],
+          tone: packet colour, actor: device that acts,
+          pkt: headers, changed: [header fields that changed] }
+   4. goTo() / play() show a step and animate the packet along its hops
+   ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const HOW = { built: false, pos: {}, steps: [], i: 0, scenario: 'dns-good', playing: false, token: 0, cut: null };
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SCENARIOS = [
+  { id: 'dns-good',   group: 'Follow a packet', label: 'Allowed lookup',        build: () => dnsSteps(false) },
+  { id: 'dns-bad',    group: 'Follow a packet', label: 'Blocked lookup',        build: () => dnsSteps(true) },
+  { id: 'dhcp',       group: 'Follow a packet', label: 'DHCP request',          build: () => dhcpSteps(false) },
+  { id: 'dhcp-cut',   group: 'Follow a packet', label: 'DHCP with a cable cut', build: () => dhcpSteps(true) },
+  { id: 'trace',      group: 'How the trace app works', label: 'Trace pc1 → srv1',
+    build: () => traceSteps('pc1', 'srv1', { intro: true }) },
+  { id: 'trace-cut',  group: 'How the trace app works', label: 'Trace after a cable cut',
+    build: () => traceSteps('pc2', 'srv1', { cut: true }) },
+  { id: 'trace-miss', group: 'How the trace app works', label: 'Trace with a missing rule',
+    build: () => traceSteps('pc1', 'pc2', { missAt: 'arista2' }) },
+];
+/* Rows of the details panel. Packets use the first six; the trace uses the rest. */
+const FIELDS = [['eth', 'Ethernet'], ['vlan', 'VLAN tag'], ['ip', 'IP'], ['udp', 'Ports'],
+                ['what', 'Contents'], ['verdict', 'Verdict'],
+                ['lookfor', 'Looking for'], ['source', 'Reads'], ['rule', 'Rule found'], ['wire', 'Wiring (NSOT)']];
+const VENDORS = { cisco: 'Cisco switch', arista: 'Arista switch', hp: 'HP switch', ovs: 'Open vSwitch' };
+
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const linkKey = (a, b) => [a, b].sort().join('~');
+const topo = () => names.topology;
+
+/* ---- Function 1: draw the map ------------------------------------------ */
+/* Used by "How it works" (prefix "how") and the Trace tab (prefix "tr").
+   Element ids start with the prefix, e.g. how-n-arista1, tr-dot.
+   Returns { pos: {device: {x, y}}, layers: {ghost, marks} }. */
+function buildMap() {
+  const map = drawMap($('how-svg'), 'how');
+  HOW.pos = map.pos;
+  HOW.layers = map.layers;
+  HOW.built = true;
+}
+
+function drawMap(svg, prefix) {
+  const t = topo();
+  const rName = t.router.name;
+  const rootSw = t.attach[rName].switch;
+  const ext = t.external ? t.external.name : null;
+
+  // Step 1: a tree rooted at the router's switch (normal links only), with
+  //         hosts under the switch they plug into, children ordered by port.
+  const kids = {};
+  const seen = new Set([rootSw]);
+  const queue = [rootSw];
+  while (queue.length) {
+    const s = queue.shift();
+    kids[s] = kids[s] || [];
+    t.links.filter(l => !l.standby && (l.a === s || l.b === s))
+      .map(l => l.a === s ? { name: l.b, port: l.a_port } : { name: l.a, port: l.b_port })
+      .sort((x, y) => x.port - y.port)
+      .forEach(k => { if (!seen.has(k.name)) { seen.add(k.name); kids[s].push(k); queue.push(k.name); } });
+  }
+  Object.entries(t.attach).forEach(([h, a]) => {
+    if (h !== rName && kids[a.switch]) kids[a.switch].push({ name: h, port: a.port, host: true });
+  });
+  Object.values(kids).forEach(k => k.sort((x, y) => x.port - y.port));
+
+  // Step 2: leaves get one column each; a parent sits above its children.
+  const col = {}, depth = {};
+  let slot = 0, maxDepth = 0;
+  (function place(n, d) {
+    depth[n] = d; maxDepth = Math.max(maxDepth, d);
+    const k = kids[n] || [];
+    if (!k.length) { col[n] = slot++; return; }
+    k.forEach(c => place(c.name, d + 1));
+    col[n] = (col[k[0].name] + col[k[k.length - 1].name]) / 2;
+  })(rootSw, 0);
+
+  // Step 3: pixels. Router (and Internet) sit left of the router's switch on
+  //         the same row, the controller and verdict service in a
+  //         management band at the top.
+  const colW = 132, rowH = 92, top = 150;
+  const pos = {};
+  Object.keys(col).forEach(n => { pos[n] = { x: col[n] * colW, y: top + depth[n] * rowH }; });
+  pos[rName] = { x: pos[rootSw].x - colW, y: top };
+  if (ext) pos[ext] = { x: pos[rootSw].x - 2 * colW, y: top };
+  pos.controller = { x: pos[rootSw].x + colW * 0.9, y: 50 };
+  pos.verdict = { x: pos.controller.x + colW * 1.25, y: 50 };
+  const xs = Object.values(pos).map(p => p.x);
+  const shift = 76 - Math.min(...xs);
+  Object.values(pos).forEach(p => { p.x += shift; });
+  const width = Math.max(...xs) + shift + 76;
+  const height = top + maxDepth * rowH + 46;
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const L = name => svgEl('g', { class: name }, svg);
+  const band = L('band'), links = L('links'), ctl = L('ctls'), ghost = L('ghosts'),
+        nodes = L('nodes'), labels = L('labels'), marks = L('marks'), dotLayer = L('dot-layer');
+
+  // Step 4: the management band (the out-of-band network).
+  svgEl('rect', { x: 12, y: 12, width: width - 24, height: 76, rx: 8 }, band);
+  svgEl('text', { x: 26, y: 32 }, band).textContent = 'Management network (out-of-band)';
+
+  // Step 5: links. Port numbers are written next to the switch end.
+  const portLabel = (from, to, port) => {
+    const A = pos[from], B = pos[to];
+    const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const edge = Math.min(Math.abs(52 / (ux || 1e-9)), Math.abs(21 / (uy || 1e-9)));
+    const d = edge + 11;
+    svgEl('text', { class: 'port', x: A.x + ux * d - uy * 9, y: A.y + uy * d + ux * 9 + 4 }, labels).textContent = port;
+  };
+  const line = (a, b, cls, key, layer) =>
+    svgEl('line', { class: cls, x1: pos[a].x, y1: pos[a].y, x2: pos[b].x, y2: pos[b].y, 'data-key': key }, layer || links);
+
+  t.links.forEach(l => {
+    line(l.a, l.b, 'l trunk' + (l.standby ? ' standby' : ''), linkKey(l.a, l.b));
+    portLabel(l.a, l.b, l.a_port);
+    portLabel(l.b, l.a, l.b_port);
+    if (l.standby) {
+      svgEl('text', { class: 'note', id: prefix + '-standby-note', x: (pos[l.a].x + pos[l.b].x) / 2,
+                      y: (pos[l.a].y + pos[l.b].y) / 2 - 9 }, labels).textContent = 'standby (blocked)';
+    }
+  });
+  Object.entries(t.attach).forEach(([h, a]) => {
+    if (!pos[h]) return;
+    line(a.switch, h, 'l' + (a.mode === 'trunk' ? ' trunk' : ''), linkKey(a.switch, h));
+    portLabel(a.switch, h, a.port);
+  });
+  if (ext) line(rName, ext, 'l', linkKey(rName, ext));
+
+  // Step 6: management lines from every switch to the controller (shown
+  //         only while a packet uses them).
+  Object.keys(t.switches).forEach(s => { if (pos[s]) line(s, 'controller', 'ctl', linkKey(s, 'controller'), ctl); });
+  line('controller', 'verdict', 'ctl', linkKey('controller', 'verdict'), ctl);
+
+  // Step 7: devices.
+  const node = (n, kind, sub) => {
+    const g = svgEl('g', { class: 'n ' + kind, id: prefix + '-n-' + n, transform: `translate(${pos[n].x},${pos[n].y})` }, nodes);
+    svgEl('rect', { x: -52, y: -21, width: 104, height: 42, rx: 6 }, g);
+    svgEl('text', { class: 'name', y: -1 }, g).textContent = n;
+    const s = svgEl('text', { class: 'sub', y: 14 }, g);
+    s.textContent = sub;
+    g.dataset.sub = sub;
+  };
+  Object.entries(t.switches).forEach(([s, info]) => { if (pos[s]) node(s, 'switch', VENDORS[info.vendor] || 'switch'); });
+  Object.entries(t.hosts).forEach(([h, info]) => { if (pos[h]) node(h, 'host', info.ip); });
+  node(rName, 'router', 'router');
+  if (ext) node(ext, 'ext', 'Internet');
+  node('controller', 'ctrl', 'Ryu controller');
+  node('verdict', 'ctrl', 'verdict service');
+
+  svgEl('circle', { id: prefix + '-dot', class: 'dot', r: 8, cx: -50, cy: -50 }, dotLayer);
+  return { pos, layers: { ghost, marks } };
+}
+
+/* ---- Function 2: paths through the switches ---------------------------- */
+function switchPath(from, to, opts) {
+  opts = opts || {};
+  const adj = {};
+  topo().links.forEach(l => {
+    if (l.standby && !opts.standby) return;
+    if (opts.avoid && linkKey(l.a, l.b) === linkKey(opts.avoid[0], opts.avoid[1])) return;
+    (adj[l.a] = adj[l.a] || []).push([l.a_port, l.b]);
+    (adj[l.b] = adj[l.b] || []).push([l.b_port, l.a]);
+  });
+  const prev = { [from]: null };
+  const queue = [from];
+  while (queue.length) {
+    const s = queue.shift();
+    if (s === to) break;
+    (adj[s] || []).sort((x, y) => x[0] - y[0]).forEach(([, n]) => {
+      if (!(n in prev)) { prev[n] = s; queue.push(n); }
+    });
+  }
+  if (!(to in prev)) return null;
+  const path = [];
+  for (let s = to; s !== null; s = prev[s]) path.unshift(s);
+  return path;
+}
+
+/* Port on switch `sw` that leads to `next` (a switch, host or the router). */
+function portTo(sw, next) {
+  const l = topo().links.find(k => linkKey(k.a, k.b) === linkKey(sw, next));
+  if (l) return l.a === sw ? l.a_port : l.b_port;
+  const a = topo().attach[next];
+  return a && a.switch === sw ? a.port : '?';
+}
+function isTrunkPort(sw, next) {
+  if (topo().links.some(k => linkKey(k.a, k.b) === linkKey(sw, next))) return true;
+  const a = topo().attach[next];
+  return !!(a && a.mode === 'trunk');
+}
+
+/* A host in a VLAN with a gateway; prefer `wanted` if the NSOT has it. */
+function pickClient(wanted, test) {
+  const t = topo();
+  const ok = h => t.attach[h] && t.attach[h].mode === 'access' && t.hosts[h] && (!test || test(h));
+  if (ok(wanted)) return wanted;
+  return Object.keys(t.hosts).find(ok);
+}
+
+/* ---- Function 3a: a DNS lookup, allowed or blocked ---------------------- */
+function dnsSteps(blocked) {
+  const t = topo(), r = t.router, rName = r.name, rSw = t.attach[rName].switch;
+  const ext = t.external ? t.external.name : rName;
+  const c = pickClient('pc1');
+  const a = t.attach[c], vlan = String(a.vlan), gw = r.gateways[vlan];
+  const P = switchPath(a.switch, rSw);
+  const cm = t.hosts[c].mac, cip = t.hosts[c].ip;
+  const dom = blocked ? 'evil.com' : 'example.com';
+  const steps = [];
+
+  const q = { eth: `${cm} → ${r.mac} (router)`, vlan: `none (${c}'s access port)`, ip: `${cip} → ${gw}`,
+              udp: 'UDP 51034 → 53', what: `Lookup: where is ${dom}?` };
+  steps.push({ hops: [c, P[0]], tone: 'neutral', actor: c, pkt: q, changed: ['eth', 'ip', 'udp', 'what'],
+    title: `${c} asks for ${dom}`,
+    text: `${c} sends a DNS lookup to its gateway, ${gw}. It leaves untagged on ${c}'s access port and enters ${P[0]} on port ${a.port}.` });
+  steps.push({ hops: [P[0], 'controller'], tone: 'neutral', actor: P[0], pkt: q, changed: [],
+    title: `${P[0]} hands it to the controller`,
+    text: `${P[0]} has a rule for every UDP packet to port 53, at priority 50: send it to the controller. So the switch does not forward it. It passes the whole packet to the controller over the management network.` });
+
+  const why = blocked ? 'on your blocklist' : "clean in Cloudflare's check and not on your blocklist";
+  const qv = Object.assign({}, q, { verdict: (blocked ? 'bad, ' : 'good, ') + why });
+  steps.push({ hops: ['controller', 'verdict', 'controller'], tone: 'neutral', actor: 'controller', pkt: qv, changed: ['verdict'],
+    title: 'The controller checks the domain',
+    text: `The controller reads "${dom}" out of the packet and asks the verdict service: GET /check?domain=${dom}. The answer is ${blocked ? 'bad' : 'good'}: ${why}.` });
+
+  if (!blocked) {
+    const out0 = portTo(P[0], P[1] || rName);
+    const qt = Object.assign({}, qv, { vlan: `${vlan} (on the trunk)` });
+    steps.push({ hops: ['controller', P[0]], tone: 'good', actor: 'controller', pkt: qt, changed: ['vlan'],
+      title: 'Allowed: send it on',
+      text: `The verdict is good, so the controller sends the packet back to ${P[0]} with one instruction: out port ${out0}, toward the router. That port is a trunk, so the packet gets VLAN tag ${vlan}.` });
+    for (let i = 0; i + 1 < P.length; i++) {
+      const sw = P[i + 1], out = portTo(sw, P[i + 2] || rName);
+      steps.push({ hops: [P[i], sw], tone: 'good', actor: sw, pkt: qt, changed: [],
+        title: `Across the trunk to ${sw}`,
+        text: `The packet crosses the trunk carrying tag ${vlan}, so ${sw} knows it belongs to VLAN ${vlan}. It enters ${sw} on port ${portTo(sw, P[i])}.` });
+      steps.push({ hops: [sw, 'controller', sw], tone: 'good', actor: sw, pkt: qt, changed: [],
+        title: `${sw} checks with the controller too`,
+        text: `${sw} has the same port-53 rule, so it hands the packet to the controller as well. The controller remembers the verdict from a moment ago, so there is no second lookup, and sends it out port ${out}.` });
+    }
+    steps.push({ hops: [rSw, rName], tone: 'good', actor: rName, pkt: qt, changed: [],
+      title: 'The router gets the lookup',
+      text: `Port ${portTo(rSw, rName)} of ${rSw} is the router's trunk. ${rName} reads tag ${vlan} and takes the packet in on its VLAN ${vlan} address, ${gw}.` });
+    steps.push({ hops: [rName, ext], tone: 'good', actor: rName, changed: ['eth', 'vlan', 'ip', 'udp'],
+      pkt: { eth: 'router → Internet', vlan: 'none (Internet side)', ip: `${r.wan_ip} → 8.8.8.8`, udp: 'UDP 40112 → 53',
+             what: `Lookup: where is ${dom}?`, verdict: qv.verdict },
+      title: 'The router asks the Internet',
+      text: `${rName} doesn't know ${dom} itself, so it asks 8.8.8.8 on the Internet. NAT replaces the source with the router's own address, ${r.wan_ip}.` });
+    steps.push({ hops: [ext, rName].concat(P.slice().reverse(), [c]), tone: 'good', actor: c, changed: ['eth', 'vlan', 'ip', 'udp', 'what'],
+      pkt: { eth: `${r.mac} → ${cm}`, vlan: `${vlan} on trunks, none on ${c}'s port`, ip: `${gw} → ${cip}`, udp: 'UDP 53 → 51034',
+             what: `Answer: ${dom} is 104.20.23.154`, verdict: qv.verdict },
+      title: `The answer reaches ${c}`,
+      text: `The answer comes back the same way. Replies come from port 53 instead of going to it, so the port-53 rule doesn't catch them: no switch sends them to the controller, and they follow the normal path to ${c}.` });
+  } else {
+    const bp = t.blocked_page_ip || '10.10.20.21';
+    const fake = { eth: `${r.mac} → ${cm}`, vlan: `none (back out ${c}'s access port)`, ip: `${gw} → ${cip}`,
+                   udp: 'UDP 53 → 51034', what: `Answer: ${dom} is ${bp}`, verdict: qv.verdict };
+    steps.push({ hops: ['controller'], tone: 'bad', actor: 'controller', pkt: fake, changed: ['eth', 'vlan', 'ip', 'udp', 'what'],
+      title: 'Blocked: the controller writes the answer',
+      text: `The verdict is bad. The controller writes a fake answer itself: "${dom} is ${bp}", the blocked-page server. It copies the lookup's ID and swaps the addresses, so the answer looks like it came from ${gw}.` });
+    steps.push({ hops: ['controller', P[0]], tone: 'bad', actor: 'controller', pkt: fake, changed: [],
+      title: `The fake answer goes to ${P[0]}`,
+      text: `The controller hands the answer to ${P[0]} with one instruction: send it out port ${a.port}, back to ${c}.` });
+    steps.push({ hops: [P[0], c], tone: 'bad', actor: c, pkt: fake, changed: [], unreached: [rName],
+      title: `${c} accepts the answer`,
+      text: `${c} accepts it. The real lookup was dropped at ${P[0]}, so the router never saw it (dashed outline).` });
+    const page = names.hosts_by_ip[bp];
+    const pa = page && t.attach[page];
+    if (pa) {
+      const P2 = switchPath(rSw, pa.switch);
+      steps.push({ hops: [c].concat(P, [rName], P2, [page]), tone: 'bad', actor: page, unreached: [],
+        pkt: { eth: `${cm} → ${r.mac}, then ${r.mac} → ${t.hosts[page].mac}`, vlan: `${vlan} up to the router, ${pa.vlan} after it`,
+               ip: `${cip} → ${bp}`, udp: 'TCP 50122 → 80 (web)', what: `GET /  (Host: ${dom})` },
+        changed: ['eth', 'vlan', 'ip', 'udp', 'what'],
+        title: 'The browser lands on the blocked page',
+        text: `When ${c}'s browser opens ${dom}, it connects to ${bp}. The router passes it from VLAN ${vlan} to VLAN ${pa.vlan}, and ${page} answers with the "Access blocked" page.` });
+    }
+  }
+  return steps;
+}
+
+/* ---- Function 3b: a DHCP request, with or without a cut cable ----------- */
+function dhcpSteps(withCut) {
+  const t = topo(), r = t.router, rName = r.name, rSw = t.attach[rName].switch;
+  const normal = h => switchPath(t.attach[h].switch, rSw);
+  // with a cut: a client whose first link has a way around it over the standby link
+  const reroute = h => {
+    const p = normal(h);
+    return p && p.length > 1 ? switchPath(p[0], rSw, { standby: true, avoid: [p[0], p[1]] }) : null;
+  };
+  const c = pickClient('pc2', withCut ? reroute : null);
+  if (!c) return [{ hops: [], title: 'Not possible in this network', text: 'No host has a second way to the router, so a cut cable cannot be worked around.', pkt: null, changed: [] }];
+  const a = t.attach[c], vlan = String(a.vlan), gw = r.gateways[vlan];
+  const cm = t.hosts[c].mac;
+  const pool = (r.dhcp && r.dhcp[vlan]) || { start: '?', end: '?' };
+  const steps = [];
+
+  let P = normal(c);
+  HOW.cut = null;
+  if (withCut) {
+    HOW.cut = [P[0], P[1]];
+    P = reroute(c);
+    const sb = t.links.find(l => l.standby);
+    steps.push({ hops: [], tone: 'bad', actor: HOW.cut[0], pkt: null, changed: [],
+      title: 'A cable is cut',
+      text: `The cable between ${HOW.cut[0]} and ${HOW.cut[1]} is cut (orange cross). Both switches report the port down. The controller rebuilds its loop-free tree and unblocks the standby link, ${sb.a} port ${sb.a_port} to ${sb.b} port ${sb.b_port}. ${c}'s way to the router is now ${P.join(' → ')}.` });
+  }
+
+  const bc = { eth: `${cm} → ff:ff:ff:ff:ff:ff (everyone)`, vlan: `none (${c}'s access port)`,
+               ip: '0.0.0.0 → 255.255.255.255', udp: 'UDP 68 → 67', what: 'DHCP Discover: "I need an address"' };
+  steps.push({ hops: [c, P[0]], tone: 'bcast', actor: c, pkt: bc, changed: ['eth', 'ip', 'udp', 'what'], ghost: P[0], ghostSkip: [c, P[1] || rName],
+    title: `${c} asks for an address`,
+    text: `${c} has no address yet, so it broadcasts: one frame to everyone (ff:ff:ff:ff:ff:ff), asking any DHCP server for an address. It enters ${P[0]} on port ${a.port}.` });
+  steps.push({ hops: [P[0], 'controller'], tone: 'bcast', actor: P[0], pkt: bc, changed: [], ghost: P[0], ghostSkip: [c, P[1] || rName],
+    title: `${P[0]} does not flood it`,
+    text: `A normal switch copies a broadcast out of every other port in VLAN ${vlan}: the crossed-out lines. ${P[0]}'s DHCP rule (priority 50, UDP 68 → 67) sends it to the controller instead.` });
+
+  const out0 = portTo(P[0], P[1] || rName);
+  const uni = Object.assign({}, bc, { eth: `${cm} → ${r.mac} (router)` });
+  steps.push({ hops: ['controller'], tone: 'uni', actor: 'controller', pkt: uni, changed: ['eth'],
+    title: 'The controller readdresses it',
+    text: `The controller finds the one port on ${P[0]} that leads to the router: port ${out0}. It changes the frame's destination to the router's MAC, ${r.mac}. The IP destination stays 255.255.255.255, because ${c} has no address yet and routers drop unicast IP from 0.0.0.0.` });
+  const uniT = Object.assign({}, uni, { vlan: `${vlan} (on the trunk)` });
+  steps.push({ hops: ['controller', P[0]], tone: 'uni', actor: 'controller', pkt: uniT, changed: ['vlan'],
+    title: 'Out one port only',
+    text: `The controller sends the frame back to ${P[0]}: out port ${out0} only, tagged VLAN ${vlan} for the trunk. No other port gets a copy.` });
+
+  for (let i = 0; i + 1 < P.length; i++) {
+    const sw = P[i + 1], out = portTo(sw, P[i + 2] || rName);
+    const viaStandby = t.links.some(l => l.standby && linkKey(l.a, l.b) === linkKey(P[i], sw));
+    steps.push({ hops: [P[i], sw], tone: 'uni', actor: sw, pkt: uniT, changed: [],
+      title: `To ${sw}${viaStandby ? ' over the standby link' : ''}`,
+      text: `It's now an ordinary unicast frame to the router's MAC, carrying tag ${vlan}${viaStandby ? ', travelling over the standby link' : ''}. It enters ${sw} on port ${portTo(sw, P[i])}.` });
+    steps.push({ hops: [sw, 'controller', sw], tone: 'uni', actor: sw, pkt: uniT, changed: [],
+      title: `${sw} checks with the controller`,
+      text: `${sw} has the same DHCP rule, so the controller sees the frame once more. It's already unicast, so it goes straight out port ${out}.` });
+  }
+  steps.push({ hops: [rSw, rName], tone: 'uni', actor: rName, pkt: uniT, changed: [],
+    title: 'The router receives it',
+    text: `${rName} receives a frame addressed to its own MAC on its VLAN ${vlan} side. Its DHCP server picks a free address from ${pool.start} to ${pool.end}.` });
+  steps.push({ hops: [rName].concat(P.slice().reverse(), [c]), tone: 'good', actor: c,
+    pkt: { eth: `${r.mac} → ${cm}`, vlan: `${vlan} on trunks, none on ${c}'s port`, ip: `${gw} → ${pool.start}`,
+           udp: 'UDP 67 → 68', what: `DHCP Offer: "use ${pool.start}"` },
+    changed: ['eth', 'vlan', 'ip', 'udp', 'what'],
+    title: `The offer reaches ${c}`,
+    text: `The offer comes back to ${c}'s own MAC. Replies from the server (UDP 67 → 68) aren't caught by the rule, so they follow the normal path. The request and acknowledgement make the same trip, and ${c} has its address.` });
+  return steps;
+}
+
+/* ---- Function 3c: how the trace app works (no packet is sent) ------------
+   The trace walks the path on paper, switch by switch:
+     1. where does the source plug in? (NSOT)
+     2. read that switch's flow rules (through the controller) and find the
+        rule this packet would match: it names the out port
+     3. what is wired to that out port? (NSOT) -> next switch, repeat
+     4. at the router (not OpenFlow, no rules): work out its Layer 3
+        decision from the NSOT subnets, then continue on the other VLAN
+   opts: intro  = start with what ICMP traceroute would show
+         cut    = a cable is cut, rules now use the standby link
+         missAt = this switch has no rule yet: the trace stops there   */
+function traceSteps(src, dst, opts) {
+  opts = opts || {};
+  const t = topo(), r = t.router, rName = r.name, rSw = t.attach[rName].switch;
+  if (!t.attach[src] || !t.attach[dst] || !t.hosts[src] || !t.hosts[dst]) {
+    return [{ hops: [], title: 'Not in this network', text: `The NSOT has no ${src} or ${dst}.`, pkt: null, changed: [] }];
+  }
+  const sa = t.attach[src], da = t.attach[dst];
+  const sv = String(sa.vlan), dv = String(da.vlan), routed = sv !== dv;
+  const dIp = t.hosts[dst].ip, dm = t.hosts[dst].mac;
+  const steps = [];
+  const col = s => s.padEnd(19);     // lines up the trace output's columns
+
+  // A cut cable changes the rules: paths then use the standby link.
+  HOW.cut = null;
+  let pathOpts = {};
+  if (opts.cut) {
+    const normal = switchPath(sa.switch, rSw);
+    HOW.cut = [normal[0], normal[1]];
+    pathOpts = { standby: true, avoid: HOW.cut };
+  }
+  const legs = routed
+    ? [switchPath(sa.switch, rSw, pathOpts), switchPath(rSw, da.switch, pathOpts)]
+    : [switchPath(sa.switch, da.switch, pathOpts)];
+  const switchHops = legs.reduce((n, p) => n + p.length, 0);
+
+  // ---- Intro: what ICMP traceroute would show --------------------------
+  if (opts.intro) {
+    steps.push({ hops: [], tone: 'trace', actor: [rName, dst], pkt: null, changed: [],
+      unreached: [...new Set([].concat(...legs))], unreachedText: 'invisible',
+      title: 'What traceroute would show',
+      text: `ICMP traceroute from ${src} to ${dst} shows only 2 hops: the router (${r.gateways[sv]}) and ${dIp}. Switches don't reply to traceroute, so all ${switchHops} switch hops are invisible (dashed). The SDN trace finds them another way: by reading each switch's rules.` });
+  }
+  if (opts.cut) {
+    steps.push({ hops: [], tone: 'bad', actor: HOW.cut[0], pkt: null, changed: [],
+      title: 'A cable is cut',
+      text: `The cable between ${HOW.cut[0]} and ${HOW.cut[1]} is cut. The controller has already relearned the paths over the standby link, so the switches' rules are different now. The trace doesn't need to know any of that: it reads the rules as they are right now.` });
+  }
+
+  // ---- Start: where the source plugs in, and what it would send ---------
+  const firstMac = routed ? r.mac : dm;
+  steps.push({ hops: [src], tone: 'trace', cursor: true, actor: src, changed: ['lookfor', 'wire'],
+    pkt: { lookfor: `a packet from ${src} to ${dst} (${dIp}), addressed to ${firstMac}`,
+           wire: `${src} plugs into ${sa.switch} port ${sa.port}, VLAN ${sv}` },
+    title: `Start at ${src}`,
+    text: routed
+      ? `The trace looks up ${src} in the NSOT: it plugs into ${sa.switch} port ${sa.port}, VLAN ${sv}. ${dst} is in VLAN ${dv}, a different subnet, so ${src} would send the packet to its gateway: the frame is addressed to the router's MAC, ${r.mac}.`
+      : `The trace looks up ${src} in the NSOT: it plugs into ${sa.switch} port ${sa.port}, VLAN ${sv}. ${dst} is in the same VLAN, so the frame is addressed straight to ${dst}'s MAC, ${dm}.`,
+    out: `trace ${src} -> ${dst}` });
+
+  // ---- One leg: follow the switches' rules from `from` to `to` ----------
+  // Returns false if a switch had no rule (the trace stops there).
+  function leg(path, fromNode, inPort, inTagged, vlan, srcMac, dstMac, toNode) {
+    let prev = fromNode, inP = inPort, tagged = inTagged;
+    for (let k = 0; k < path.length; k++) {
+      const sw = path[k], next = path[k + 1] || toNode;
+      const dpid = t.switches[sw].dpid;
+      const outP = portTo(sw, next);
+      const outTrunk = isTrunkPort(sw, next);
+      const standby = t.links.some(l => l.standby && linkKey(l.a, l.b) === linkKey(sw, next));
+      const lookfor = `in port ${inP}, ${tagged ? 'VLAN ' + vlan + ' tag' : 'no tag'}, from ${srcMac} to ${dstMac}`;
+
+      // Step A: move to this switch (the NSOT says what the last out port is wired to).
+      const wire = t.switches[prev]
+        ? `${prev} port ${portTo(prev, sw)} is wired to ${sw} port ${inP}`
+        : `${prev} plugs into ${sw} port ${inP}`;
+      steps.push({ hops: [prev, sw], tone: 'trace', cursor: true, actor: sw, changed: ['lookfor', 'wire'],
+        pkt: { lookfor, wire },
+        title: `On to ${sw}`,
+        text: t.switches[prev]
+          ? `The NSOT says ${prev} port ${portTo(prev, sw)} is wired to ${sw} port ${inP}, so the trace continues at ${sw}, arriving on port ${inP}.`
+          : `The packet would enter ${sw} on port ${inP}. Next the trace needs ${sw}'s rules to see where it goes from there.` });
+
+      // Step B: read this switch's rules.
+      if (opts.missAt === sw) {
+        steps.push({ hops: [sw], ctl: [sw], tone: 'bad', cursor: true, actor: sw, changed: ['source', 'rule'],
+          pkt: { lookfor, source: `${sw}'s flow table (dpid ${dpid}), via GET /stats/flow/${dpid}`,
+                 rule: 'none matches. Only the table-miss rule would: "send to the controller"' },
+          title: `${sw} has no rule yet`,
+          text: `The trace reads ${sw}'s flow table, but no rule matches: nobody has talked to ${dst} through ${sw} in the last 60 seconds, so its rule expired (or was never learned). A real packet would go to the controller here. The trace can't guess where it would go next, so it stops and says so.`,
+          out: `${col(sw + ' (dpid ' + dpid + ')')}in ${inP} -> no rule yet, stop` });
+        steps.push({ hops: [sw], tone: 'bad', cursor: true, actor: sw, changed: [], pkt: null,
+          title: 'How to fill the gap',
+          text: `The trace prints how far it got and why it stopped. To fill the gap, run one ping from ${src} to ${dst}: the switching app learns the path and installs the rules. Trace again and it goes all the way.` });
+        return false;
+      }
+      let action;
+      if (tagged === outTrunk) action = `out port ${outP}`;
+      else if (outTrunk) action = `add VLAN ${vlan} tag, out port ${outP}`;
+      else action = `remove the tag, out port ${outP}`;
+      steps.push({ hops: [sw], ctl: [sw], tone: 'trace', cursor: true, actor: sw, changed: ['source', 'rule'],
+        pkt: { lookfor, source: `${sw}'s flow table (dpid ${dpid}), via GET /stats/flow/${dpid}`,
+               rule: `in_port=${inP}, ${tagged ? 'VLAN ' + vlan : 'untagged'}, dl_src=${srcMac}, dl_dst=${dstMac}  →  ${action}` },
+        title: `Read ${sw}'s rules`,
+        text: `The trace asks the controller for ${sw}'s flow table; the controller fetches it from the switch over OpenFlow (dotted line). One rule matches what the trace is looking for: ${action}${standby ? ', which is the standby link' : ''}. That is ${sw}'s hop: in ${inP}, out ${outP}.`,
+        out: `${col(sw + ' (dpid ' + dpid + ')')}in ${inP} -> out ${outP}${standby ? '  (standby link)' : ''}` });
+
+      prev = sw;
+      inP = t.switches[next] ? portTo(next, sw) : null;
+      tagged = outTrunk;
+    }
+    return true;
+  }
+
+  // ---- Leg 1: source -> router (routed) or source -> destination ---------
+  if (!leg(legs[0], src, sa.port, false, sv, t.hosts[src].mac, firstMac, routed ? rName : dst)) return steps;
+  const last1 = legs[0][legs[0].length - 1];
+
+  if (routed) {
+    // ---- The router: Layer 3, worked out from the NSOT ------------------
+    steps.push({ hops: [last1, rName], tone: 'trace', cursor: true, actor: rName, changed: ['wire'],
+      pkt: { lookfor: `a packet to ${dIp}, arriving on VLAN ${sv}`, wire: `${rSw} port ${portTo(rSw, rName)} is ${rName}, the router` },
+      title: `${rName} is a router`,
+      text: `The NSOT says ${rSw} port ${portTo(rSw, rName)} is ${rName}. A router isn't an OpenFlow switch: it has no flow table to read. Its decision is based on the destination IP address, which is Layer 3.` });
+    const subnet = (r.subnets || {})[dv] || 'VLAN ' + dv;
+    steps.push({ hops: [rName], tone: 'uni', cursor: true, actor: rName, changed: ['source', 'rule', 'lookfor'],
+      pkt: { lookfor: `in port ${portTo(rSw, rName)} of ${rSw}, VLAN ${dv} tag, to ${dm}`,
+             source: 'the NSOT: each VLAN\'s subnet and gateway',
+             rule: `${dIp} is in ${subnet} (VLAN ${dv})  →  send out the VLAN ${dv} side, from ${r.mac} to ${dm}` },
+      title: 'The router step (Layer 3)',
+      text: `The trace works out the router's decision itself: ${dIp} is in ${subnet}, VLAN ${dv}'s subnet. So ${rName} sends the packet out its VLAN ${dv} side, readdressed: from its own MAC to ${dst}'s MAC, tagged ${dv}, TTL one lower. The trace now looks for that packet.`,
+      out: `${col(rName + ' (router)')}VLAN ${sv} -> ${dv}, to ${dst}` });
+
+    // ---- Leg 2: router -> destination, back through the switches --------
+    if (!leg(legs[1], rName, portTo(rSw, rName), true, dv, r.mac, dm, dst)) return steps;
+  }
+
+  // ---- Arrived ------------------------------------------------------------
+  const lastSw = (routed ? legs[1] : legs[0]).slice(-1)[0];
+  steps.push({ hops: [lastSw, dst], tone: 'good', cursor: true, actor: dst, changed: ['wire'],
+    pkt: { wire: `${lastSw} port ${da.port} is ${dst}: the destination` },
+    title: `${dst} reached`,
+    text: `The NSOT says ${lastSw} port ${da.port} is ${dst}, the destination. The trace is complete: ${switchHops} switch hops, each with its DPID and in and out port${routed ? ', plus the router hop' : ''}. No packet was sent; it only read rules and the NSOT.`,
+    out: `-> ${dst} reached` });
+  return steps;
+}
+
+/* ---- Function 4: show one step, animate it, play them all -------------- */
+function setTone(elm, tone) {
+  elm.classList.remove('tone-neutral', 'tone-good', 'tone-bad', 'tone-uni', 'tone-bcast', 'tone-trace');
+  elm.classList.add('tone-' + (tone || 'neutral'));
+}
+
+/* The packet rests on the top edge of a device's box, so it never covers
+   the device's name. */
+const DOT_DY = -22;
+
+function placeDot(name, tone) {
+  const dot = $('how-dot');
+  setTone(dot, tone);
+  if (!name || !HOW.pos[name]) { dot.style.display = 'none'; return; }
+  dot.style.display = '';
+  dot.setAttribute('cx', HOW.pos[name].x);
+  dot.setAttribute('cy', HOW.pos[name].y + DOT_DY);
+}
+
+function renderStep(i) {
+  const s = HOW.steps[i];
+  const svg = $('how-svg');
+
+  // Step 1: clear the previous step's highlights.
+  svg.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
+  svg.querySelectorAll('.n.active, .n.unreached').forEach(e => {
+    e.classList.remove('active', 'unreached');
+    e.querySelector('.sub').textContent = e.dataset.sub;
+  });
+  HOW.layers.ghost.innerHTML = '';
+
+  // Step 2: light the links the packet travels on, in its colour.
+  for (let j = 0; j + 1 < s.hops.length; j++) {
+    const e = svg.querySelector(`[data-key="${linkKey(s.hops[j], s.hops[j + 1])}"]`);
+    if (e) { e.classList.add('on'); setTone(e, s.tone); }
+  }
+  // Step 2b: management lines used at this step (the trace reading a
+  //          switch's rules through the controller).
+  (s.ctl || []).forEach(sw => {
+    const e = svg.querySelector(`[data-key="${linkKey(sw, 'controller')}"]`);
+    if (e) e.classList.add('on');
+  });
+  // Step 3: the device(s) that act, and devices the packet never reached
+  //         (or that traceroute cannot see).
+  [].concat(s.actor || []).forEach(n => {
+    const g = $('how-n-' + n);
+    if (g) { g.classList.add('active'); setTone(g, s.tone); }
+  });
+  (s.unreached || []).forEach(n => {
+    const g = $('how-n-' + n);
+    if (g) { g.classList.add('unreached'); g.querySelector('.sub').textContent = s.unreachedText || 'never saw it'; }
+  });
+  // Step 3b: the trace is drawn as a hollow ring, a packet as a filled dot.
+  $('how-dot').classList.toggle('cursor', !!s.cursor);
+  // Step 4: for a broadcast, the copies a normal switch would send, crossed out.
+  if (s.ghost) drawGhosts(s.ghost, s.ghostSkip || []);
+
+  // Step 5: the text panel and the packet's headers.
+  $('how-count').textContent = `Step ${i + 1} of ${HOW.steps.length}`;
+  $('how-title').textContent = s.title;
+  $('how-text').textContent = s.text;
+  const isTrace = HOW.scenario.startsWith('trace');
+  $('how-pkt-title').textContent = isTrace ? 'What the trace reads' : 'The packet at this step';
+  $('how-pkt').innerHTML = s.pkt
+    ? FIELDS.filter(([k]) => s.pkt[k]).map(([k, label]) => {
+        const chg = (s.changed || []).includes(k) ? ' class="chg"' : '';
+        return `<dt>${label}</dt><dd${chg}>${esc(s.pkt[k])}</dd>`;
+      }).join('')
+    : `<dt>None</dt><dd>${isTrace ? 'Nothing read at this step.' : 'No packet yet: the controller is reacting to the cut cable.'}</dd>`;
+
+  // Step 6: for the trace, its printed output so far (newest line in blue).
+  $('how-trace').hidden = !isTrace;
+  if (isTrace) {
+    const lines = HOW.steps.slice(0, i + 1).filter(x => x.out);
+    $('how-trace-out').innerHTML = lines.length
+      ? lines.map(x => `<span${x === s ? ' class="now"' : ''}>${esc(x.out)}</span>`).join('\n')
+      : '(nothing printed yet)';
+  }
+  document.querySelectorAll('#how-steps li').forEach((li, k) => {
+    if (k === i) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+  $('how-back').disabled = i === 0;
+  $('how-next').disabled = i === HOW.steps.length - 1;
+}
+
+function drawGhosts(sw, skip) {
+  const t = topo(), vlan = t.attach[skip[0]] ? t.attach[skip[0]].vlan : null;
+  const targets = [];
+  t.links.forEach(l => {
+    if (l.standby) return;
+    if (HOW.cut && linkKey(l.a, l.b) === linkKey(HOW.cut[0], HOW.cut[1])) return;   // cut cable: nothing goes there
+    if (l.a === sw) targets.push(l.b);
+    if (l.b === sw) targets.push(l.a);
+  });
+  Object.entries(t.attach).forEach(([h, a]) => {
+    if (a.switch === sw && (a.mode === 'trunk' || String(a.vlan) === String(vlan))) targets.push(h);
+  });
+  targets.filter(n => !skip.includes(n) && HOW.pos[n]).forEach(n => {
+    const A = HOW.pos[sw], B = HOW.pos[n];
+    const x = A.x + (B.x - A.x) * 0.62, y = A.y + (B.y - A.y) * 0.62;
+    svgEl('line', { class: 'ghost', x1: A.x, y1: A.y, x2: x, y2: y }, HOW.layers.ghost);
+    svgEl('line', { class: 'ghost-x', x1: x - 7, y1: y - 7, x2: x + 7, y2: y + 7 }, HOW.layers.ghost);
+    svgEl('line', { class: 'ghost-x', x1: x - 7, y1: y + 7, x2: x + 7, y2: y - 7 }, HOW.layers.ghost);
+  });
+}
+
+/* The scenario's standing state: a cut cable and an open standby link. */
+function renderCut() {
+  const svg = $('how-svg');
+  HOW.layers.marks.innerHTML = '';
+  svg.querySelectorAll('.l.standby').forEach(e => e.classList.toggle('open', !!HOW.cut));
+  const note = $('how-standby-note');
+  if (note) note.textContent = HOW.cut ? 'standby (now in use)' : 'standby (blocked)';
+  if (!HOW.cut) return;
+  const A = HOW.pos[HOW.cut[0]], B = HOW.pos[HOW.cut[1]];
+  const x = (A.x + B.x) / 2, y = (A.y + B.y) / 2;
+  svgEl('line', { class: 'cut', x1: x - 9, y1: y - 9, x2: x + 9, y2: y + 9 }, HOW.layers.marks);
+  svgEl('line', { class: 'cut', x1: x - 9, y1: y + 9, x2: x + 9, y2: y - 9 }, HOW.layers.marks);
+}
+
+function moveDot(a, b, tone, token) {
+  return new Promise(resolve => {
+    const A = HOW.pos[a], B = HOW.pos[b], dot = $('how-dot');
+    if (!A || !B) return resolve(true);
+    setTone(dot, tone);
+    dot.style.display = '';
+    const dur = reduceMotion ? 0 : Math.max(450, Math.min(1100, Math.hypot(B.x - A.x, B.y - A.y) * 2.6));
+    const t0 = performance.now();
+    (function frame(now) {
+      if (token !== HOW.token) return resolve(false);
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // ease in-out
+      dot.setAttribute('cx', A.x + (B.x - A.x) * e);
+      dot.setAttribute('cy', A.y + (B.y - A.y) * e + DOT_DY);
+      if (k < 1) requestAnimationFrame(frame); else resolve(true);
+    })(t0);
+  });
+}
+
+async function animateStep(i, token) {
+  const s = HOW.steps[i];
+  placeDot(s.hops[0], s.tone);
+  for (let j = 0; j + 1 < s.hops.length; j++) {
+    if (!await moveDot(s.hops[j], s.hops[j + 1], s.tone, token)) return false;
+  }
+  return true;
+}
+
+const wait = (ms, token) => new Promise(res => setTimeout(() => res(token === HOW.token), ms));
+
+/* mode: 'start' = packet at the start of the step, 'end' = at its end,
+         'animate' = move it along the step's hops */
+function goTo(i, mode) {
+  HOW.playing = false;
+  $('how-play').textContent = 'Play';
+  const token = ++HOW.token;
+  HOW.i = Math.max(0, Math.min(i, HOW.steps.length - 1));
+  renderStep(HOW.i);
+  const s = HOW.steps[HOW.i];
+  if (mode === 'animate') animateStep(HOW.i, token);
+  else placeDot(mode === 'end' ? s.hops[s.hops.length - 1] : s.hops[0], s.tone);
+}
+
+async function play() {
+  if (HOW.playing) { goTo(HOW.i, 'end'); return; }      // pause
+  if (HOW.i >= HOW.steps.length - 1) HOW.i = 0;           // finished: start over
+  HOW.playing = true;
+  $('how-play').textContent = 'Pause';
+  const token = ++HOW.token;
+  for (let i = HOW.i; i < HOW.steps.length; i++) {
+    HOW.i = i;
+    renderStep(i);
+    if (!await animateStep(i, token)) return;
+    // time to read the step: longer text, longer pause
+    if (!await wait(Math.min(7500, 1800 + HOW.steps[i].text.length * 20), token)) return;
+  }
+  HOW.playing = false;
+  $('how-play').textContent = 'Play';
+}
+
+function selectScenario(id) {
+  if (!HOW.built) { HOW.scenario = id; initHow(); return; }   // map not drawn yet: draw it first
+  const sc = SCENARIOS.find(s => s.id === id) || SCENARIOS[0];
+  HOW.scenario = sc.id;
+  HOW.cut = null;
+  HOW.steps = sc.build();
+  document.querySelectorAll('#how-scenarios .btn').forEach(b => b.setAttribute('aria-checked', String(b.dataset.id === sc.id)));
+  const ring = $('how-dot');
+  if (ring) ring.classList.remove('cursor');
+  $('how-steps').innerHTML = HOW.steps.map((s, k) => `<li><button type="button" data-step="${k}">${esc(s.title)}</button></li>`).join('');
+  renderCut();
+  goTo(0, 'start');
+}
+
+function initHow() {
+  if (HOW.built) return true;
+  if (!names.topology || !names.topology.router) {
+    $('how-text').textContent = 'The map needs the topology from the controller (/lab9/nsot/summary). Restart Ryu with the current code.';
+    return false;
+  }
+  // one row per group: "Follow a packet", "How the trace app works"
+  const groups = [...new Set(SCENARIOS.map(s => s.group))];
+  $('how-scenarios').innerHTML = groups.map(g =>
+    `<div class="scen-row"><span class="group">${esc(g)}</span>` +
+    SCENARIOS.filter(s => s.group === g).map(s =>
+      `<button class="btn" type="button" role="radio" aria-checked="false" data-id="${s.id}">${esc(s.label)}</button>`).join('') +
+    '</div>').join('');
+  buildMap();
+  selectScenario(HOW.scenario);
+  return true;
+}
+
+$('how-scenarios').addEventListener('click', ev => { const b = ev.target.closest('[data-id]'); if (b) selectScenario(b.dataset.id); });
+$('how-steps').addEventListener('click', ev => { const b = ev.target.closest('[data-step]'); if (b) goTo(+b.dataset.step, 'animate'); });
+$('how-back').addEventListener('click', () => goTo(HOW.i - 1, 'end'));
+$('how-next').addEventListener('click', () => goTo(HOW.i + 1, 'animate'));
+$('how-play').addEventListener('click', play);
+document.addEventListener('keydown', ev => {
+  if (current !== 'how' || /input|textarea/i.test(ev.target.tagName)) return;
+  if (ev.key === 'ArrowRight') { ev.preventDefault(); goTo(HOW.i + 1, 'animate'); }
+  if (ev.key === 'ArrowLeft')  { ev.preventDefault(); goTo(HOW.i - 1, 'end'); }
+});
+/* "Watch ... hop by hop" links on the app tabs */
+document.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => {
+  HOW.scenario = b.dataset.how;
+  showApp('how');
+  if (HOW.built) selectScenario(b.dataset.how);
+}));
+
+/* =====================================================================
+   Path trace (A5): a live trace from the controller, drawn on the map
+   =====================================================================
+   1. initTrace()    fills the host pickers and draws the map (once)
+   2. runTrace()     GET /lab9/trace?src=..&dst=.. (the controller reads
+                     the switches' real flow tables)
+   3. renderTrace()  lights the path on the map, prints the trace output
+                     and the rule matched at every switch
+   ===================================================================== */
+const TR = { built: false };
+
+function initTrace() {
+  if (TR.built) return true;
+  const t = names.topology;
+  if (!t || !t.router) {
+    $('trace-summary').textContent = 'The map needs the topology from the controller (/lab9/nsot/summary). Restart Ryu with the current code.';
+    return false;
+  }
+  // Step 1: host pickers (sources are hosts; destinations also the Internet).
+  const hosts = Object.keys(t.hosts).sort();
+  const opt = (v, label) => `<option value="${esc(v)}">${esc(label)}</option>`;
+  $('trace-src').innerHTML = hosts.map(h => opt(h, `${h}  ${t.hosts[h].ip}`)).join('');
+  $('trace-dst').innerHTML = hosts.map(h => opt(h, `${h}  ${t.hosts[h].ip}`)).join('') +
+    (t.external ? opt(t.external.name, `${t.external.name}  Internet`) : '');
+  $('trace-src').value = hosts.includes('pc1') ? 'pc1' : hosts[0];
+  $('trace-dst').value = hosts.includes('srv1') ? 'srv1' : hosts[1];
+  // Step 2: the same map as "How it works", with its own element ids.
+  drawMap($('trace-svg'), 'tr');
+  $('tr-dot').style.display = 'none';
+  TR.built = true;
+  return true;
+}
+
+async function runTrace(ev) {
+  if (ev) ev.preventDefault();
+  if (!initTrace()) return;
+  const src = $('trace-src').value, dst = $('trace-dst').value;
+  $('trace-head').className = '';
+  $('trace-head').textContent = `Tracing ${src} to ${dst}...`;
+  notice('trace', '');
+  try {
+    const r = await fetch(API + '/lab9/trace?src=' + encodeURIComponent(src) + '&dst=' + encodeURIComponent(dst));
+    const d = await r.json();
+    if (!r.ok) {
+      $('trace-head').textContent = 'Cannot trace that';
+      $('trace-summary').textContent = d.error || ('The controller answered ' + r.status + '.');
+      $('trace-out').textContent = '';
+      $('trace-rules').innerHTML = '';
+      return;
+    }
+    renderTrace(d);
+  } catch (e) {
+    $('trace-head').textContent = 'No trace';
+    notice('trace', 'Cannot reach the controller at ' + (API || location.host) + ': ' + e.message, true);
+  }
+}
+
+function renderTrace(d) {
+  const t = names.topology, svg = $('trace-svg');
+  // Step 1: clear the last trace from the map.
+  svg.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
+  svg.querySelectorAll('.n.active').forEach(e => e.classList.remove('active'));
+
+  // Step 2: the devices in order: source, every hop, destination if reached.
+  const ext = t.external && t.external.ip === d.dst ? t.external.name : null;
+  const seq = [d.src].concat(d.hops.map(h => h.name));
+  if (d.complete) seq.push(ext || d.dst);
+  const tone = d.complete ? 'good' : 'bad';
+  for (let i = 0; i + 1 < seq.length; i++) {
+    const e = svg.querySelector(`[data-key="${linkKey(seq[i], seq[i + 1])}"]`);
+    if (e) { e.classList.add('on'); setTone(e, tone); }
+  }
+  seq.forEach((n, i) => {
+    const g = $('tr-n-' + n);
+    if (!g) return;
+    g.classList.add('active');
+    setTone(g, !d.complete && i === seq.length - 1 ? 'bad' : 'good');
+  });
+
+  // Step 3: headline, summary, printed output.
+  const sw = d.hops.filter(h => h.kind === 'switch');
+  const router = d.hops.some(h => h.kind === 'router');
+  const head = $('trace-head');
+  if (d.complete) {
+    head.className = 'ok';
+    head.textContent = `${d.src} reaches ${d.dst}`;
+    $('trace-summary').textContent = `${plural(sw.length, 'switch hop', 'switch hops')}${router ? ', plus the router' : ''}. ` +
+      `${plural(d.flow_reads, 'flow table', 'flow tables')} read through the controller; no packet sent.`;
+  } else {
+    head.className = 'stopped';
+    head.textContent = `Stopped at ${sw.length ? sw[sw.length - 1].name : d.src}`;
+    $('trace-summary').textContent = d.stopped;
+  }
+  $('trace-out').textContent = d.lines.join('\n');
+
+  // Step 4: the rule matched at every switch (the evidence).
+  $('trace-rules').innerHTML = d.hops.map(h => h.kind === 'switch'
+    ? `<li${h.out_port === null ? ' class="stop"' : ''}><b>${esc(h.name)}</b> (dpid ${h.dpid}), in ${h.in_port} → ${h.out_port === null ? 'no rule' : 'out ' + h.out_port}${h.standby ? ', standby link' : ''}
+        <span>${esc(h.rule || 'No rule matches: a real packet would go to the controller here.')}${h.rule_packets !== null ? `, used by ${plural(h.rule_packets, 'packet', 'packets')} so far` : ''}</span></li>`
+    : `<li><b>${esc(h.name)}</b> (router, Layer 3)<span>${esc(h.decision)}</span></li>`).join('');
+}
+
+$('trace-form').addEventListener('submit', runTrace);
+
+/* ---------------- Refresh loop ---------------- */
+let offline = false;   // only the "cannot reach" message clears itself
+async function refresh() {
+  if (current === 'how') { initHow(); return; }     // the map has no live data to poll
+  if (current === 'trace') {                        // traces run on request, not every 2 s
+    if (!TR.built && initTrace()) runTrace();       // first visit: trace the default pair once
+    return;
+  }
+  try {
+    await (current === 'dns' ? loadDns() : loadDhcp());
+    if (offline) { offline = false; notice(current, ''); }
+  } catch (e) {
+    offline = true;
+    notice(current, 'Cannot reach the controller at ' + (API || location.host) + '. Check that Ryu is running.', true);
+  }
+}
+
+async function start() {
+  try {
+    names = await api('/lab9/nsot/summary');
+    $('where').textContent = `Ryu at ${names.controller}, OpenFlow 1.3`;
+  } catch (e) { /* names stay as numbers */ }
+  const fromPath = location.pathname.includes('/dhcp/') ? 'dhcp' : 'dns';
+  const fromHash = location.hash.slice(1);
+  showApp(['dns', 'dhcp', 'trace', 'how'].includes(fromHash) ? fromHash : fromPath);
+  loadSwitches();
+  setInterval(() => { if (!document.hidden) { refresh(); loadSwitches(); } }, 2000);
+}
+start();
+</script>
+</body>
+</html>

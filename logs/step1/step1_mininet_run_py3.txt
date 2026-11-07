@@ -1,0 +1,80 @@
+*** Creating network
+*** Adding hosts:
+h1 h2 h3 h4 
+*** Adding switches:
+s1 s2 
+*** Adding links:
+(h1, s1) (h2, s1) (h3, s2) (h4, s2) (s1, s2) 
+*** Configuring hosts
+h1 h2 h3 h4 
+*** Starting controller
+c0 
+*** Starting 2 switches
+s1 s2 ...
+*** Ping: testing ping reachability
+h1 -> X h3 X 
+h2 -> X X h4 
+h3 -> h1 X X 
+h4 -> X h2 X 
+*** Results: 66% dropped (4/12 received)
+*** Stopping 1 controllers
+c0 
+*** Stopping 5 links
+.....
+*** Stopping 2 switches
+s1 s2 
+*** Stopping 4 hosts
+h1 h2 h3 h4 
+*** Done
+
+===== controller connection =====
+s1 connected=True
+s2 connected=True
+
+===== expected =====
+h1<->h3 OK (VLAN 10), h2<->h4 OK (VLAN 20), every other pair FAILS (different VLANs)
+
+===== trunk s1-eth3 (must be tagged) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s1-eth3, link-type EN10MB (Ethernet), capture size 262144 bytes
+14:19:35.600174 00:00:00:00:00:04 > ff:ff:ff:ff:ff:ff, ethertype 802.1Q (0x8100), length 46: vlan 20, p 0, ethertype ARP, Request who-has 10.0.0.3 tell 10.0.0.4, length 28
+14:19:35.602623 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype 802.1Q (0x8100), length 46: vlan 10, p 0, ethertype ARP, Request who-has 10.0.0.1 tell 10.0.0.3, length 28
+14:19:35.602683 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype 802.1Q (0x8100), length 46: vlan 10, p 0, ethertype ARP, Reply 10.0.0.1 is-at 00:00:00:00:00:01, length 28
+14:19:35.603814 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.0.0.1 > 10.0.0.3: ICMP echo request, id 27778, seq 1, length 64
+14:19:35.603832 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.0.0.3 > 10.0.0.1: ICMP echo reply, id 27778, seq 1, length 64
+14:19:36.602834 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.0.0.1 > 10.0.0.3: ICMP echo request, id 27778, seq 2, length 64
+14:19:36.602858 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype 802.1Q (0x8100), length 102: vlan 10, p 0, ethertype IPv4, 10.0.0.3 > 10.0.0.1: ICMP echo reply, id 27778, seq 2, length 64
+
+7 packets captured
+7 packets received by filter
+0 packets dropped by kernel
+
+===== access s1-eth1 (must be untagged) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s1-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+14:19:35.602657 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype ARP (0x0806), length 42: Request who-has 10.0.0.1 tell 10.0.0.3, length 28
+14:19:35.602664 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype ARP (0x0806), length 42: Reply 10.0.0.1 is-at 00:00:00:00:00:01, length 28
+14:19:35.603809 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype IPv4 (0x0800), length 98: 10.0.0.1 > 10.0.0.3: ICMP echo request, id 27778, seq 1, length 64
+14:19:35.603834 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype IPv4 (0x0800), length 98: 10.0.0.3 > 10.0.0.1: ICMP echo reply, id 27778, seq 1, length 64
+14:19:36.602821 00:00:00:00:00:01 > 00:00:00:00:00:03, ethertype IPv4 (0x0800), length 98: 10.0.0.1 > 10.0.0.3: ICMP echo request, id 27778, seq 2, length 64
+14:19:36.602860 00:00:00:00:00:03 > 00:00:00:00:00:01, ethertype IPv4 (0x0800), length 98: 10.0.0.3 > 10.0.0.1: ICMP echo reply, id 27778, seq 2, length 64
+
+6 packets captured
+6 packets received by filter
+0 packets dropped by kernel
+
+===== flows on s1 =====
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=10.023s, table=0, n_packets=3, n_bytes=250, idle_timeout=60, priority=1,in_port=3,dl_vlan=20,dl_dst=00:00:00:00:00:02 actions=strip_vlan,output:2
+ cookie=0x0, duration=13.034s, table=0, n_packets=4, n_bytes=336, idle_timeout=60, priority=1,in_port=1,vlan_tci=0x0000/0x1fff,dl_dst=00:00:00:00:00:03 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:3
+ cookie=0x0, duration=13.035s, table=0, n_packets=5, n_bytes=454, idle_timeout=60, priority=1,in_port=3,dl_vlan=10,dl_dst=00:00:00:00:00:01 actions=strip_vlan,output:1
+ cookie=0x0, duration=10.022s, table=0, n_packets=2, n_bytes=140, idle_timeout=60, priority=1,in_port=2,vlan_tci=0x0000/0x1fff,dl_dst=00:00:00:00:00:04 actions=push_vlan:0x8100,set_field:20->vlan_vid,output:3
+ cookie=0x0, duration=19.069s, table=0, n_packets=32, n_bytes=1512, priority=0 actions=CONTROLLER:65535
+
+===== flows on s2 =====
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=10.023s, table=0, n_packets=2, n_bytes=148, idle_timeout=60, priority=1,in_port=3,dl_vlan=20,dl_dst=00:00:00:00:00:04 actions=strip_vlan,output:2
+ cookie=0x0, duration=10.026s, table=0, n_packets=3, n_bytes=238, idle_timeout=60, priority=1,in_port=2,vlan_tci=0x0000/0x1fff,dl_dst=00:00:00:00:00:02 actions=push_vlan:0x8100,set_field:20->vlan_vid,output:3
+ cookie=0x0, duration=13.038s, table=0, n_packets=5, n_bytes=434, idle_timeout=60, priority=1,in_port=1,vlan_tci=0x0000/0x1fff,dl_dst=00:00:00:00:00:01 actions=push_vlan:0x8100,set_field:10->vlan_vid,output:3
+ cookie=0x0, duration=13.035s, table=0, n_packets=4, n_bytes=352, idle_timeout=60, priority=1,in_port=3,dl_vlan=10,dl_dst=00:00:00:00:00:03 actions=strip_vlan,output:1
+ cookie=0x0, duration=19.071s, table=0, n_packets=32, n_bytes=1528, priority=0 actions=CONTROLLER:65535

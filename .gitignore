@@ -1,0 +1,21 @@
+# Secrets: never commit (API keys, VM passwords)
+.env
+*.env
+.env.*
+*.pem
+*.key
+id_*
+credentials*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+~$*.docx

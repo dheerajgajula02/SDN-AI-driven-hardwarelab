@@ -1,0 +1,4 @@
+NSOT: /home/sdn/lab9/part_a/nsot.json (6 switches)
+
+== drift ==
+  no drift: every switch matches the NSOT

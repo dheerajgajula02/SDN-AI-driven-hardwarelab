@@ -1,0 +1,7 @@
+CONTROL (unicast forcing OFF): lease obtained: True
+  pc1-eth0       2 DHCP packets
+  arista2-eth3   2 DHCP packets
+  arista2-eth4   0 DHCP packets
+  cisco1-eth2    2 DHCP packets
+  cisco1-eth4    2 DHCP packets
+  arista1-eth3   2 DHCP packets

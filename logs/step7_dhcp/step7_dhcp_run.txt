@@ -1,0 +1,76 @@
+*** Creating network
+*** Adding hosts:
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Adding switches:
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Adding links:
+(arista1, arista2) (arista1, cisco1) (arista1, ovs1) (arista2, cisco1) (arista2, ovs2) (cisco1, hp1) (pc1, arista1) (pc2, arista2) (r1, cisco1) (r1, inet) (srv1, hp1) (vm1, ovs1) (vm2, ovs2) 
+*** Configuring hosts
+inet pc1 pc2 r1 srv1 vm1 vm2 
+*** Starting controller
+
+*** Starting 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 ...
+
+===== switches reset to bare (protocols | other-config | fail_mode | controller) =====
+arista1  [] | {disable-in-band="true", | dp-desc="arista1"} | []
+arista2  [] | {disable-in-band="true", | dp-desc="arista2"} | []
+cisco1   [] | {disable-in-band="true", | dp-desc="cisco1"} | []
+hp1      [] | {disable-in-band="true", | dp-desc="hp1"} | []
+ovs1     [] | {disable-in-band="true", | dp-desc="ovs1"} | []
+ovs2     [] | {disable-in-band="true", | dp-desc="ovs2"} | []
+
+===== waiting =====
+run part_a/nsot_apply.py on the controller now (waiting up to 600 s)
+
+===== after nsot_apply =====
+arista1  ["OpenFlow13"] | {datapath-id="000000000000000b", | disable-in-band="true", | dp-desc="arista1"} | secure | tcp:10.224.78.132:6633
+arista2  ["OpenFlow13"] | {datapath-id="000000000000000c", | disable-in-band="true", | dp-desc="arista2"} | secure | tcp:10.224.78.132:6633
+cisco1   ["OpenFlow13"] | {datapath-id="0000000000000001", | disable-in-band="true", | dp-desc="cisco1"} | secure | tcp:10.224.78.132:6633
+hp1      ["OpenFlow13"] | {datapath-id="0000000000000015", | disable-in-band="true", | dp-desc="hp1"} | secure | tcp:10.224.78.132:6633
+ovs1     ["OpenFlow13"] | {datapath-id="000000000000001f", | disable-in-band="true", | dp-desc="ovs1"} | secure | tcp:10.224.78.132:6633
+ovs2     ["OpenFlow13"] | {datapath-id="0000000000000020", | disable-in-band="true", | dp-desc="ovs2"} | secure | tcp:10.224.78.132:6633
+
+===== A4.1 DHCP intercept flow on arista2 (expect priority=50, cookie=0x40, udp,tp_src=68,tp_dst=67 -> CONTROLLER) =====
+cookie=0x40, duration=3.859s, table=0, n_packets=0, n_bytes=0, priority=50,udp,tp_src=68,tp_dst=67 actions=CONTROLLER:65535
+
+===== A4.2 pc2 DHCP client output + leased address =====
+udhcpc (v1.21.1) started
+Sending discover...
+Sending select for 10.10.10.118...
+Lease of 10.10.10.118 obtained, lease time 43200
+LEASE ip=10.10.10.118 subnet=255.255.255.0 router=10.10.10.1 server=10.10.10.1 lease=43200s
+
+    inet 10.10.10.118/24 scope global pc2-eth0
+
+===== A4.3 BEFORE edge switch (pc2-eth0): host sends BROADCAST (ff:ff:ff:ff:ff:ff / 255.255.255.255) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on pc2-eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+05:01:34.870577 00:00:00:00:10:12 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 322: 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 00:00:00:00:10:12, length 280
+05:01:34.877167 00:00:00:00:01:01 > 00:00:00:00:10:12, ethertype IPv4 (0x0800), length 342: 10.10.10.1.67 > 10.10.10.118.68: BOOTP/DHCP, Reply, length 300
+05:01:34.894582 00:00:00:00:10:12 > ff:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 334: 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 00:00:00:00:10:12, length 292
+05:01:34.899708 00:00:00:00:01:01 > 00:00:00:00:10:12, ethertype IPv4 (0x0800), length 342: 10.10.10.1.67 > 10.10.10.118.68: BOOTP/DHCP, Reply, length 300
+
+4 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+
+===== A4.4 AFTER edge switch (arista2-eth1 trunk): rewritten to UNICAST frame (eth dst 00:00:00:00:01:01) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on arista2-eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+05:01:34.873190 00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 326: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 00:00:00:00:10:12, length 280
+05:01:34.896224 00:00:00:00:10:12 > 00:00:00:00:01:01, ethertype 802.1Q (0x8100), length 338: vlan 10, p 0, ethertype IPv4, 0.0.0.0.68 > 255.255.255.255.67: BOOTP/DHCP, Request from 00:00:00:00:10:12, length 292
+
+2 packets captured
+2 packets received by filter
+0 packets dropped by kernel
+
+===== A4.5 OTHER VLAN 10 HOST (pc1-eth0): expect 0 packets captured (never flooded) =====
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on pc1-eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+
+0 packets captured
+0 packets received by filter
+0 packets dropped by kernel
+*** Starting CLI:
+mininet> 

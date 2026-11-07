@@ -1,0 +1,10 @@
+real nsot.json -> loaded 6 switches
+  ports: {32: {1: ('trunk', [10, 20]), 2: ('access', 20)}, 1: {1: ('trunk', [10, 20]), 2: ('trunk', [10, 20]), 3: ('trunk', [10, 20]), 4: ('trunk', [10, 20])}, 21: {1: ('trunk', [10, 20]), 2: ('access', 20)}, 11: {1: ('trunk', [10, 20]), 2: ('access', 10), 3: ('trunk', [10, 20]), 4: ('trunk', [10, 20])}, 12: {1: ('trunk', [10, 20]), 2: ('access', 10), 3: ('trunk', [10, 20]), 4: ('trunk', [10, 20])}, 31: {1: ('trunk', [10, 20]), 2: ('access', 20)}}
+duplicate dpid               -> REFUSED: duplicate dpid 11 (arista2)
+one-sided link               -> REFUSED: arista1 port 3: link to ovs1:1 has no matching entry there
+link VLANs disagree          -> REFUSED: cisco1 port 4: both ends of the link to hp1:1 must match (mode, vlans, standby)
+undefined VLAN               -> REFUSED: arista1 port 2: VLAN [30] is not in the vlans section
+unknown port mode            -> REFUSED: arista1 port 2: unknown mode 'hybrid'
+vlan_mode switch             -> REFUSED: hp1: vlan_mode 'switch' not supported yet
+mgmt overlaps VLAN           -> REFUSED: management subnet 10.10.10.0/24 overlaps VLAN 10 (10.10.10.0/24)
+switch mgmt on data VLAN     -> REFUSED: arista1: mgmt ip 10.10.10.99 is not in management subnet 10.224.0.0/16

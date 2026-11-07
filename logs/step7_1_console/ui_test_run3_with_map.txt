@@ -1,0 +1,36 @@
+PASS  T1 page loads, 6 switches shown connected  [6 lit]
+PASS  T2 empty "Block domain" explains what to do  [Type a domain to block, such as example.com.]
+     before: vm1 resolves colorado.edu -> ['151.101.130.133', '151.101.2.133', '151.101.66.133', '151.101.194.133']
+PASS  T3 "Block domain" adds colorado.edu to the list  [Blocked colorado.edu.]
+PASS  T4 network: vm1 gets the blocked page for colorado.edu  [['10.10.20.21']]
+PASS  T5 feed shows the lookup as blocked at the top  [06:37:55 | colorado.edu | vm1 at 10.10.20.31, entered ovs1 port 2, VLAN 20 | Blocked, answered with the blocked page | O]
+PASS  T6 "Unblock" removes colorado.edu from the list  [Unblocked colorado.edu.]
+PASS  T7 network: vm1 gets the real colorado.edu again  [['151.101.194.133', '151.101.130.133', '151.101.2.133', '151.101.66.133']]
+PASS  T8 "Check" evil.com says "would be blocked"  [evil.com would be blocked. On your blocklist]
+PASS  T8 "Check" example.com says "would be allowed"  [example.com would be allowed. Clean in Cloudflare's check, not on your blocklist]
+PASS  T9a "Turn filtering off" shows filtering is off  [Filtering is off]
+PASS  T9b network: with filtering off, evil.com is NOT the blocked page  [['74.91.138.132']]
+PASS  T9c "Turn filtering on" shows filtering is on  [Filtering is on]
+PASS  T9d network: with filtering on, evil.com is the blocked page  [['10.10.20.21']]
+PASS  T10 "Clear history" empties the DNS feed
+PASS  T11 DHCP tab opens and shows its state  [Unicast forcing is on]
+PASS  T12a network, forcing on: pc2 gets a lease
+PASS  T12b network, forcing on: pc1 sees 0 DHCP packets  [0 captured]
+PASS  T12c feed shows the request path ending at r1  [06:38:02 Request from pc2 00:00:00:00:10:12, VLAN 10 pc2arista22→1cisco13→1r1 Broadcast to ff:ff:ff:ff:ff:ff b]
+PASS  T13a "Turn unicast forcing off" shows it is off  [Unicast forcing is off]
+PASS  T13b network, forcing off: pc1 now sees the broadcast (proves the toggle is real)  [2 captured]
+PASS  T13c "Turn unicast forcing on" shows it is on again  [Unicast forcing is on]
+PASS  T14 "Clear history" empties the DHCP feed
+PASS  T15 "Watch a request hop by hop" opens the map on the DHCP request  [Step 1 of 8]
+PASS  T16 dns-good path goes pc1>arista1 and r1>inet
+PASS  T16 dns-bad path goes arista1>pc1 and hp1>srv1
+PASS  T16 dhcp path goes arista2>cisco1 and cisco1>r1
+PASS  T16 dhcp-cut path goes arista2>arista1 and arista1>cisco1
+PASS  T16 blocked lookup: the router is not on the lookup's path
+PASS  T16 cable cut: the cut is drawn and the standby link is shown in use
+PASS  T17 Next goes to step 2, Back returns to step 1  [Step 2 of 9 / Step 1 of 9]
+PASS  T18 Play moves the packet and goes on to step 2 by itself  [dot x 142 -> 124.78703703514262]
+PASS  T18 Pause stops it  [Step 2 of 9, button "Play"]
+FAIL  T19 no JavaScript errors on the page (error recorder present)  [-1]
+
+32/33 checks passed

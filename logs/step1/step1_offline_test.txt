@@ -1,0 +1,27 @@
+
+1. s1: pc1 ARP broadcast (untagged, port 1)
+   PacketOut actions=[OFPActionPushVlan(ethertype=33024,len=8,type=17), OFPActionSetField(vlan_vid=4106), OFPActionOutput(len=16,max_len=65509,port=3,type=0)]
+
+2. s2: same broadcast arrives tagged 10 on trunk
+   PacketOut actions=[OFPActionPopVlan(len=8,type=18), OFPActionOutput(len=16,max_len=65509,port=1,type=0)]
+
+3. s2: pc2 replies to pc1 (pc1 known via trunk)
+   FlowMod  match={'in_port': 1, 'eth_dst': '00:00:00:00:00:01', 'vlan_vid': 0}
+            actions=[OFPActionPushVlan(ethertype=33024,len=8,type=17), OFPActionSetField(vlan_vid=4106), OFPActionOutput(len=16,max_len=65509,port=3,type=0)]
+   PacketOut actions=[OFPActionPushVlan(ethertype=33024,len=8,type=17), OFPActionSetField(vlan_vid=4106), OFPActionOutput(len=16,max_len=65509,port=3,type=0)]
+
+4. s1: reply arrives tagged 10 on trunk (pc1 known on port 1)
+   FlowMod  match={'in_port': 3, 'eth_dst': '00:00:00:00:00:01', 'vlan_vid': 4106}
+            actions=[OFPActionPopVlan(len=8,type=18), OFPActionOutput(len=16,max_len=65509,port=1,type=0)]
+   PacketOut actions=[OFPActionPopVlan(len=8,type=18), OFPActionOutput(len=16,max_len=65509,port=1,type=0)]
+
+5. s1: tagged frame on access port (VLAN hopping)
+   (dropped)
+
+6. s1: VLAN 30 on trunk (not allowed)
+   (dropped)
+
+7. s1: port 9 not in PORTS
+   (dropped)
+
+learned: {1: {10: {'00:00:00:00:00:01': 1, '00:00:00:00:00:02': 3}}, 2: {10: {'00:00:00:00:00:01': 3, '00:00:00:00:00:02': 1}}}

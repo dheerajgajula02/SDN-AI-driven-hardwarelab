@@ -1,0 +1,85 @@
+*** Creating network
+*** Adding hosts:
+app1 app2 pc1 pc2 srv1 
+*** Adding switches:
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Adding links:
+(app1, ovs1) (app2, ovs2) (arista1, cisco1) (arista1, ovs1) (arista2, cisco1) (arista2, ovs2) (cisco1, hp1) (pc1, arista1) (pc2, arista2) (srv1, hp1) 
+*** Configuring hosts
+app1 app2 pc1 pc2 srv1 
+*** Starting controller
+
+*** Starting 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 ...
+
+===== switches reset to bare (protocols | other-config | fail_mode | controller) =====
+arista1  [] | {disable-in-band="true", | dp-desc="arista1"} | []
+arista2  [] | {disable-in-band="true", | dp-desc="arista2"} | []
+cisco1   [] | {disable-in-band="true", | dp-desc="cisco1"} | []
+hp1      [] | {disable-in-band="true", | dp-desc="hp1"} | []
+ovs1     [] | {disable-in-band="true", | dp-desc="ovs1"} | []
+ovs2     [] | {disable-in-band="true", | dp-desc="ovs2"} | []
+
+===== waiting =====
+run part_a/nsot_apply.py on the controller now (waiting up to 600 s)
+
+===== after nsot_apply (protocols | other-config | fail_mode | controller) =====
+arista1  ["OpenFlow13"] | {datapath-id="000000000000000b", | disable-in-band="true", | dp-desc="arista1"} | secure | tcp:10.224.78.132:6633
+arista2  ["OpenFlow13"] | {datapath-id="000000000000000c", | disable-in-band="true", | dp-desc="arista2"} | secure | tcp:10.224.78.132:6633
+cisco1   ["OpenFlow13"] | {datapath-id="0000000000000001", | disable-in-band="true", | dp-desc="cisco1"} | secure | tcp:10.224.78.132:6633
+hp1      ["OpenFlow13"] | {datapath-id="0000000000000015", | disable-in-band="true", | dp-desc="hp1"} | secure | tcp:10.224.78.132:6633
+ovs1     ["OpenFlow13"] | {datapath-id="000000000000001f", | disable-in-band="true", | dp-desc="ovs1"} | secure | tcp:10.224.78.132:6633
+ovs2     ["OpenFlow13"] | {datapath-id="0000000000000020", | disable-in-band="true", | dp-desc="ovs2"} | secure | tcp:10.224.78.132:6633
+
+===== flows on every switch =====
+--- arista1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.683s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+--- arista2
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.538s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+--- cisco1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.835s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+--- hp1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.378s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+--- ovs1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.163s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+--- ovs2
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.012s, table=0, n_packets=0, n_bytes=0, priority=0 actions=CONTROLLER:65535
+
+===== pingall (expect only same-VLAN pairs: 8/20 received) =====
+
+*** Ping: testing ping reachability
+app1 -> app2 X X srv1 
+app2 -> app1 X X srv1 
+pc1 -> X X pc2 X 
+pc2 -> X X pc1 X 
+srv1 -> app1 app2 X X 
+*** Results: 60% dropped (8/20 received)
+
+===== app1 -> app2 (VLAN 20, path ovs1 > arista1 > cisco1 > arista2 > ovs2) =====
+PING 10.10.20.32 (10.10.20.32) 56(84) bytes of data.
+64 bytes from 10.10.20.32: icmp_seq=1 ttl=64 time=0.054 ms
+64 bytes from 10.10.20.32: icmp_seq=2 ttl=64 time=0.072 ms
+
+--- 10.10.20.32 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 999ms
+rtt min/avg/max/mdev = 0.054/0.063/0.072/0.009 ms
+*** Stopping 0 controllers
+
+*** Stopping 10 links
+..........
+*** Stopping 6 switches
+arista1 arista2 cisco1 hp1 ovs1 ovs2 
+*** Stopping 5 hosts
+app1 app2 pc1 pc2 srv1 
+*** Done

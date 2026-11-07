@@ -1,0 +1,6 @@
+  cisco1   would run on 10.224.76.126: sudo -n ovs-vsctl set bridge cisco1 protocols=OpenFlow13 other-config:d
+  arista1  SKIPPED: unsupported OpenFlow version '1.5'
+  arista2  would run on 10.224.76.126: sudo -n ovs-vsctl set bridge arista2 protocols=OpenFlow13 other-config:
+  hp1      SKIPPED: no driver for 'hp_aos'
+  ovs1     would run on 10.224.76.126: sudo -n ovs-vsctl set bridge ovs1 protocols=OpenFlow13 other-config:dat
+  ovs2     SKIPPED: transport 'ssl' not supported yet (only tcp)

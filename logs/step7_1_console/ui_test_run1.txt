@@ -1,0 +1,26 @@
+PASS  T1 page loads, 6 switches shown connected  [6 lit]
+PASS  T2 empty "Block domain" explains what to do  [Type a domain to block, such as example.com.]
+     before: vm1 resolves colorado.edu -> ['151.101.130.133', '151.101.2.133', '151.101.66.133', '151.101.194.133']
+PASS  T3 "Block domain" adds colorado.edu to the list  [Blocked colorado.edu.]
+PASS  T4 network: vm1 gets the blocked page for colorado.edu  [['10.10.20.21']]
+FAIL  T5 feed shows the lookup as blocked at the top  [06:19:32 | colorado.edu | vm1 at 10.10.20.31, entered ovs1 port 2, VLAN 20 | Allowed, sent on to the router | Clean in C]
+PASS  T6 "Unblock" removes colorado.edu from the list  [Unblocked colorado.edu.]
+PASS  T7 network: vm1 gets the real colorado.edu again  [['151.101.194.133', '151.101.130.133', '151.101.2.133', '151.101.66.133']]
+PASS  T8 "Check" evil.com says "would be blocked"  [evil.com would be blocked. On your blocklist]
+PASS  T8 "Check" example.com says "would be allowed"  [example.com would be allowed. Clean in Cloudflare's check, not on your blocklist]
+PASS  T9a "Turn filtering off" shows filtering is off  [Filtering is off]
+PASS  T9b network: with filtering off, evil.com is NOT the blocked page  [['74.91.138.132']]
+PASS  T9c "Turn filtering on" shows filtering is on  [Filtering is on]
+PASS  T9d network: with filtering on, evil.com is the blocked page  [['10.10.20.21']]
+PASS  T10 "Clear history" empties the DNS feed
+PASS  T11 DHCP tab opens and shows its state  [Unicast forcing is on]
+PASS  T12a network, forcing on: pc2 gets a lease
+PASS  T12b network, forcing on: pc1 sees 0 DHCP packets  [0 captured]
+PASS  T12c feed shows the request path ending at r1  [06:19:39 Request from pc2 00:00:00:00:10:12, VLAN 10 pc2arista22→1cisco13→1r1 Broadcast to ff:ff:ff:ff:ff:ff b]
+PASS  T13a "Turn unicast forcing off" shows it is off  [Unicast forcing is off]
+PASS  T13b network, forcing off: pc1 now sees the broadcast (proves the toggle is real)  [2 captured]
+PASS  T13c "Turn unicast forcing on" shows it is on again  [Unicast forcing is on]
+PASS  T14 "Clear history" empties the DHCP feed
+PASS  T15 no JavaScript errors on the page  [0 errors]
+
+22/23 checks passed
