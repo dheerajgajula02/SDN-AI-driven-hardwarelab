@@ -1336,7 +1336,7 @@ Cost so far: 5 HTTP calls, $0.00026.
 - `events.py`: every step of B1-B3 goes to `logs/ai_events.jsonl` and the
   console feed; `llm_client.EVENT_HOOK` reports each model call.
 - `b1_analyst.py`, `b2_intent.py`, `b3_responder.py` (+ `b3_policy.json`,
-  `prompts/`): see `docs/PART_B_DESIGN.md` once written; each file starts
+  `prompts/`): see `docs/PART_B_DESIGN.md`; each file starts
   with a numbered description of its steps.
 - B3 offline tests on real snapshots, `tests/test_b3_logic.py` 25/25. They
   found a real problem before any live run: a `ping -f` flood is symmetric
@@ -1433,3 +1433,33 @@ away; no JavaScript errors. Run 1 failed one check: the console's `cap()`
 helper only lowercases, so "approved" was not capitalised; fixed.
 Regression: REST 22/22, console UI 38/38, B3 logic 25/25, validator 32/32,
 LLM client offline 19/19 (`logs/stepB2_approvals/`).
+
+## Step 15: B2 live intent test (`part_b/tests/test_b2_intents.py`, 24/24; run 1 22/24)
+
+Real requests, real model, every outcome checked on the wire with a control:
+
+| Request | Where (code chose) | On the wire |
+|---|---|---|
+| "Block pc1 from pinging srv1" (human says no first: nothing installed) | arista1 port 2 (vendor) | ping fails, web still works |
+| "vm1 must not be able to open srv1's web page" | ovs1 port 2 (OVS) | web fails, ping still works |
+| "Nobody may open web pages on srv1 for the next 10 minutes" | hp1 (vendor), hard_timeout 600 s | web from pc2 fails |
+| "Allow pc1 to ping srv1 again" | delete of the arista1 block | ping works again |
+| "Quarantine vm2: it must not talk to anyone" | ovs2 port 2 (OVS) | vm2 reaches nobody, its DNS still works (protected) |
+
+Bad requests (nothing installed, count of intent rules unchanged): ambiguous
+("make the network faster": question), unknown device ("the printer":
+question), unknown address (question), contradictory (refused by the model),
+rate limit (refused by the validator: no meters), DNS (refused), the
+controller (question: not a device in the NSOT), "block all traffic going to
+srv1" (refused by the validator: would drop r1's DNS/DHCP replies to srv1),
+duplicate of the quarantine (refused: duplicate rule).
+
+**Run 1 found a real safety bug** (B5 failure log #6): "Block pc1 from
+reaching 10.10.10.99" was translated as "pc1 -> any" and applied. Fixed in
+code (`intent_check(nsot, request)`): IPs in the request must be NSOT
+addresses, and "any" needs the operator to have said any/all/nobody/everyone/
+quarantine. 15 model calls per run.
+
+Note: `test_dataflow.py` and `test_console_ui.py` both give pc2 a DHCP
+address (10.10.10.118); reset it to its NSOT address 10.10.10.12 before Part B
+runs (the B3 detectors name hosts by NSOT address).

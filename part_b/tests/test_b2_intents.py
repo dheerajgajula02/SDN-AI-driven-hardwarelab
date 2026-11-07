@@ -138,7 +138,7 @@ def main():
            ('duplicate of G5', 'Quarantine vm2: it must not talk to anyone')]
     for why, text in bad:
         res = run(text, 'refused')
-        check('BAD %-26s -> %s' % (why, res['outcome']), res['outcome'] in ('unclear', 'refused'),
+        check('BAD %-26s -> %s' % (why, res['outcome']), res['outcome'] in ('unclear', 'refused', 'invalid'),
               (res.get('why') or res.get('question') or '')[:200])
     check('BAD none of the bad requests installed anything (%d intent rules before and after)' % before,
           len(intents()) == before)

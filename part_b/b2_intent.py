@@ -30,6 +30,7 @@ Options: --dry-run (stop before asking), --yes (auto-confirm: scripted tests onl
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -72,12 +73,31 @@ SCHEMA = {
 # Function 1: translate (the only step that uses the model)
 # ===========================================================================
 
-def intent_check(nsot):
-    """Code checks on the model's translation (beyond the schema)."""
+IPV4 = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+# Words that make "any" a faithful translation ("nobody may ...", "quarantine vm2").
+WIDE_WORDS = re.compile(r'\b(any|anyone|anybody|anything|anywhere|all|every|everyone|everybody|everything|'
+                        r'nobody|no one|none|quarantine|quarantined|isolate|isolated)\b', re.I)
+
+
+def intent_check(nsot, request=''):
+    """Code checks on the model's translation (beyond the schema).
+    `request` is the operator's own text: the translation may not be WIDER
+    than what was asked (failure log #6: an unknown address was turned into
+    "any destination", which would have cut pc1 off from everything)."""
     names = set(nsot['hosts']) | set(['any'])
+    known_ips = set(nsot_view.ip_names(nsot))
+    unknown_ips = sorted(set(ip for ip in IPV4.findall(request) if ip not in known_ips))
 
     def check(a):
         errors = []
+        # Step 1: no silent widening: an address the NSOT does not know, or
+        #         "any" the operator never said, is not translated into a rule.
+        if a['policies'] and unknown_ips:
+            errors.append('the request names %s, which is not an address in the NSOT: answer "unclear" '
+                          '(or "refuse"); never replace it with another host or "any"' % ', '.join(unknown_ips))
+        if any('any' in (p['src'], p['dst']) for p in a['policies']) and not WIDE_WORDS.search(request):
+            errors.append('a policy uses "any", but the request does not say any/all/everyone/nobody: that '
+                          'would block more than was asked; name the hosts, or answer "unclear"')
         if a['status'] == 'ok' and not a['policies']:
             errors.append('status "ok" needs at least one policy')
         if a['status'] != 'ok' and a['policies']:
@@ -108,7 +128,7 @@ def translate(text, nsot):
     with open(os.path.join(HERE, 'prompts', 'b2_intent.md')) as f:
         system = f.read().replace('{network}', nsot_view.describe_network(nsot))
     return llm_client.call_llm('b2_intent', system, 'Operator request: %s' % text, SCHEMA,
-                               extra_check=intent_check(nsot), max_tokens=3000)
+                               extra_check=intent_check(nsot, text), max_tokens=3000)
 
 
 # ===========================================================================

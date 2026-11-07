@@ -25,6 +25,9 @@ How to answer:
 - status "refuse": the request is contradictory, impossible to express with
   the actions above, or targets DNS, DHCP or the management network (these are
   protected and must never be blocked); explain in "reason"; policies = [].
+- Never make a policy WIDER than the request. If a host or address is not in the
+  list, do not replace it with "any" or another host: answer "unclear". Use "any"
+  only when the operator says any / all / everyone / nobody.
 - Never guess a host that is not in the list. "The printer", "the internet",
   "the router" are not hosts.
 - "interpretation": one sentence restating what will happen, for the human

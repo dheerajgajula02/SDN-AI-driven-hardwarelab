@@ -1,0 +1,104 @@
+PASS  control: pc1 pings srv1, pc1 web ok, vm1 web ok, vm2 pings vm1
+
+I understood: Block ICMP (ping) traffic from pc1 to srv1.
+  INSTALL on arista1 (arista): priority 30, DROP {"eth_src": "00:00:00:00:10:11", "eth_type": 2048, "in_port": 2, "ip_proto": 1, "ipv4_dst": "10.10.20.21"}, removes itself after 1800 s
+      ok: switch arista1 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on arista1
+   "Block pc1 from pinging srv1" -> declined: Block ICMP (ping) traffic from pc1 to srv1.
+PASS  H1 human answers "n": declined, nothing installed
+
+I understood: Block ICMP (ping) traffic from pc1 to srv1.
+  INSTALL on arista1 (arista): priority 30, DROP {"eth_src": "00:00:00:00:10:11", "eth_type": 2048, "in_port": 2, "ip_proto": 1, "ipv4_dst": "10.10.20.21"}, removes itself after 1800 s
+      ok: switch arista1 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on arista1
+Apply? [y/N] y   (auto-confirmed: --yes, for scripted tests)
+   "Block pc1 from pinging srv1" -> applied: Block ICMP (ping) traffic from pc1 to srv1.
+PASS  G1 applied on arista1 (vendor), verified on the switch
+        [('INSTALL on arista1 (arista): priority 30, DROP {"eth_src": "00:00:00:00:10:11", "eth_type": 2048, "in_port": 2, "ip_proto": 1, "ipv4_dst": "10.10.20.21"}, removes itself after 1800 s', True)]
+PASS  G1 on the wire: pc1 -> srv1 ping now FAILS, pc1 -> srv1 web still WORKS (only ICMP blocked)
+
+I understood: Block TCP port 80 traffic from vm1 to srv1, preventing vm1 from opening srv1's web page.
+  INSTALL on ovs1 (ovs): priority 30, DROP {"eth_src": "00:00:00:00:20:31", "eth_type": 2048, "in_port": 2, "ip_proto": 6, "ipv4_dst": "10.10.20.21", "tcp_dst": 80}, removes itself after 1800 s
+      ok: switch ovs1 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on ovs1
+Apply? [y/N] y   (auto-confirmed: --yes, for scripted tests)
+   "vm1 must not be able to open srv1's web page" -> applied: Block TCP port 80 traffic from vm1 to srv1, preventing vm1 from opening srv1's web page.
+PASS  G2 applied on ovs1 (OVS server)
+        [('INSTALL on ovs1 (ovs): priority 30, DROP {"eth_src": "00:00:00:00:20:31", "eth_type": 2048, "in_port": 2, "ip_proto": 6, "ipv4_dst": "10.10.20.21", "tcp_dst": 80}, removes itself after 1800 s', True)]
+PASS  G2 on the wire: vm1 web to srv1 FAILS, vm1 ping to srv1 still WORKS
+
+I understood: For the next 10 minutes, all TCP traffic to port 80 (web) on srv1 is blocked from any sender.
+  INSTALL on hp1 (hp): priority 30, DROP {"eth_type": 2048, "ip_proto": 6, "ipv4_dst": "10.10.20.21", "tcp_dst": 80}, removes itself after 600 s
+      ok: switch hp1 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on hp1
+Apply? [y/N] y   (auto-confirmed: --yes, for scripted tests)
+   "Nobody may open web pages on srv1 for the next 10 minutes" -> applied: For the next 10 minutes, all TCP traffic to port 80 (web) on srv1 is blocked from any sender.
+PASS  G3 applied on hp1 (srv1's switch, vendor) with hard_timeout 600 s
+        {'switch': 'hp1', 'purpose': 'intent', 'priority': 30, 'match': {'eth_type': 2048, 'ipv4_dst': '10.10.20.21', 'ip_proto': 6, 'tcp_dst': 80}, 'action': 'drop', 'meter_id': 1, 'hard_timeout': 600}
+PASS  G3 on the wire: pc2 web to srv1 FAILS
+
+I understood: Remove any earlier block so pc1 can ping srv1 (ICMP) again.
+  DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}
+      ok: cookie 176 (ai_intent) may be deleted by the AI
+Apply? [y/N] y   (auto-confirmed: --yes, for scripted tests)
+   "Allow pc1 to ping srv1 again" -> applied: Remove any earlier block so pc1 can ping srv1 (ICMP) again.
+PASS  G4 the G1 block is deleted (verified on arista1)
+        [("DELETE on arista1: priority 30 cookie 176 {'dl_src': '00:00:00:00:10:11', 'in_port': 2, 'nw_proto': 1, 'dl_type': 2048, 'nw_dst': '10.10.20.21'}", True)]
+PASS  G4 on the wire: pc1 -> srv1 ping WORKS again
+PASS  G5 control: vm2 DNS works before
+
+I understood: Block all traffic originating from vm2 to any destination, quarantining it.
+  INSTALL on ovs2 (ovs): priority 30, DROP {"eth_src": "00:00:00:00:20:32", "eth_type": 2048, "in_port": 2}, removes itself after 1800 s
+      ok: switch ovs2 is in the NSOT
+      ok: priority 30 is inside the AI band 20-40 (below the protected rules at 50)
+      ok: match fields, ports and addresses all exist in the NSOT; no management address
+      ok: simulated 36 protected packets (DNS, DHCP, management): none disrupted
+      ok: no duplicate or conflicting AI rule on ovs2
+Apply? [y/N] y   (auto-confirmed: --yes, for scripted tests)
+   "Quarantine vm2: it must not talk to anyone" -> applied: Block all traffic originating from vm2 to any destination, quarantining it.
+PASS  G5 applied on ovs2 (OVS server)
+        [('INSTALL on ovs2 (ovs): priority 30, DROP {"eth_src": "00:00:00:00:20:32", "eth_type": 2048, "in_port": 2}, removes itself after 1800 s', True)]
+PASS  G5 on the wire: vm2 -> vm1 ping FAILS, but vm2 DNS still WORKS (protected flow)
+   "Make the network faster" -> unclear: Which specific traffic should I speed up (e.g., rate-limit or block something), and between which hosts?
+PASS  BAD ambiguous                  -> unclear
+        Which specific traffic should I speed up (e.g., rate-limit or block something), and between which hosts?
+   "Block the printer from reaching srv1" -> unclear: There is no printer in the device list. Which host should be blocked from reaching srv1?
+PASS  BAD unknown device             -> unclear
+        There is no printer in the device list. Which host should be blocked from reaching srv1?
+   "Block pc1 from reaching 10.10.10.99" -> unclear: 10.10.10.99 is not a host in the device list. Which listed host should pc1 be blocked from reaching?
+PASS  BAD unknown address            -> unclear
+        10.10.10.99 is not a host in the device list. Which listed host should pc1 be blocked from reaching?
+   "Block pc1 from srv1, but pc1 must always be able to reach srv1" -> refused: The request is contradictory: it asks to block pc1 from srv1 while also requiring that pc1 always be able to reach srv1. These cannot both hold.
+PASS  BAD contradictory              -> refused
+        The request is contradictory: it asks to block pc1 from srv1 while also requiring that pc1 always be able to reach srv1. These cannot both hold.
+   "Limit vm1 to 100 packets per second towards srv1" -> refused: ovs1 does not support meters (/stats/meterfeatures reports max_meter 0)
+PASS  BAD impossible: no meters      -> refused
+        ovs1 does not support meters (/stats/meterfeatures reports max_meter 0)
+   "Stop pc1 from using DNS" -> refused: DNS is served by r1 and is a protected service; blocking DNS traffic is not permitted.
+PASS  BAD protected: DNS             -> refused
+        DNS is served by r1 and is a protected service; blocking DNS traffic is not permitted.
+   "Block all traffic to the SDN controller" -> unclear: Which host in the list is the SDN controller (e.g., ovs1, ovs2, or another listed device)? It is not in the device list.
+PASS  BAD protected: management      -> unclear
+        Which host in the list is the SDN controller (e.g., ovs1, ovs2, or another listed device)? It is not in the device list.
+   "Block all traffic going to srv1" -> refused: would disrupt protected traffic: DNS reply r1 -> srv1; DHCP reply r1 -> srv1
+PASS  BAD would cut DHCP/DNS replies -> refused
+        would disrupt protected traffic: DNS reply r1 -> srv1; DHCP reply r1 -> srv1
+   "Quarantine vm2: it must not talk to anyone" -> refused: duplicate: the same rule already exists on ovs2 (ai_intent, cookie 176)
+PASS  BAD duplicate of G5            -> refused
+        duplicate: the same rule already exists on ovs2 (ai_intent, cookie 176)
+PASS  BAD none of the bad requests installed anything (3 intent rules before and after)
+PASS  cleanup: no intent rules left, vm2 -> vm1 ping works, web works again
+
+24/24 checks passed  (model calls: 15)
