@@ -41,18 +41,24 @@ OFPPC_PORT_DOWN = 1      # port config: administratively shut
 # ===========================================================================
 
 def load_nsot(path=NSOT_PATH):
-    """Step 1: the NSOT is the only place names, DPIDs and wiring come from."""
+    """The NSOT is the only place names, DPIDs and wiring come from.
+    Path: LAB9_NSOT if set, else ../part_a/nsot.json."""
+    # Step 1: open the file and parse the JSON (a broken file fails loudly here).
     with open(path) as f:
         return json.load(f)
 
 
 def controller_url(nsot, override=None):
-    """Step 1: 'http://ip:port' of the controller REST API.
+    """'http://ip:port' of the controller REST API.
     Order: --controller, then LAB9_CONTROLLER, then the NSOT."""
+    # Step 1: an address given on the command line or in the environment wins
+    #         (the laptop reaches the controller over Tailscale, not the LAN IP).
     addr = override or os.environ.get('LAB9_CONTROLLER')
+    # Step 2: otherwise use the controller IP and REST port from the NSOT.
     if not addr:
         c = nsot['controller']
         addr = '%s:%s' % (c['ip'], c['rest_port'])
+    # Step 3: make sure it is a full URL.
     return addr if addr.startswith('http') else 'http://' + addr
 
 
@@ -61,8 +67,11 @@ def controller_url(nsot, override=None):
 # ===========================================================================
 
 def rest_get(base, path, timeout=5):
-    """Step 1: GET base+path and return the parsed JSON.
-    (bytes are decoded first: Python 3.5's json.loads needs a str.)"""
+    """GET base+path and return the parsed JSON.
+    A switch that does not answer within `timeout` seconds raises an error
+    instead of hanging the collector."""
+    # Step 1: send the request; Step 2: decode the bytes to text first
+    #         (Python 3.5's json.loads needs a str), then parse the JSON.
     with urllib.request.urlopen(base + path, timeout=timeout) as r:
         return json.loads(r.read().decode('utf-8'))
 
@@ -93,17 +102,25 @@ def collect_switches(nsot, base):
 # ===========================================================================
 
 def flow_owner(nsot, cookie):
-    """The app that owns a cookie (NSOT flow_cookies), or 'unauthorized'."""
+    """The app that owns a cookie (NSOT flow_cookies), or 'unauthorized'.
+    Every Lab 9 app stamps its rules with its own cookie, e.g. DNS = 48."""
+    # Step 1: look the cookie up in the NSOT (keys are text, e.g. "48").
+    # Step 2: a cookie no app uses means no app installed the rule.
     return nsot.get('flow_cookies', {}).get(str(cookie), 'unauthorized')
 
 
 def is_drop(rule):
     """A drop rule has no actions at all (Ryu shows [] or ['DROP'])."""
+    # Step 1: OpenFlow has no "drop" action; an empty action list means drop.
     return rule.get('actions') in ([], ['DROP'], 'DROP')
 
 
 def rule_key(rule):
-    """A stable id for a rule across two readings: priority + cookie + match."""
+    """A stable id for a rule across two readings: priority + cookie + match.
+    Used to pair the same rule in reading 1 and reading 2."""
+    # Step 1: OpenFlow identifies a rule by priority + match; the cookie is
+    #         added so two apps' rules can never be confused. sort_keys makes
+    #         the text the same however the fields are ordered.
     return '%s|%s|%s' % (rule.get('priority'), rule.get('cookie'),
                          json.dumps(rule.get('match', {}), sort_keys=True))
 
@@ -115,6 +132,7 @@ def collect_flows(nsot, base, names):
                         packets, bytes, age_s, idle_timeout, hard_timeout} ]}"""
     tables = {}
     for name in names:
+        # Step 0: the switch's name -> its DPID (from the NSOT).
         dpid = nsot['switches'][name]['dpid']
         # Step 1: the switch's real table, as the controller reports it.
         raw = rest_get(base, '/stats/flow/%d' % dpid).get(str(dpid), [])
@@ -162,22 +180,29 @@ def port_rates(first, second, t1, t2, nsot):
     'invalid' with a reason, never as zero traffic (same rule as Lab 8)."""
     rates = {}
     for name in second:
+        # Step 1: the real time between this switch's two readings (not just
+        #         the 2 s sleep: the REST calls themselves take time).
         gap = t2[name] - t1[name]
         rates[name] = {}
         for port, b in second[name].items():
             a = first.get(name, {}).get(port)
+            # Step 2: what the port is wired to, from the NSOT (e.g. "pc1").
             row = {'to': nsot['switches'][name]['ports'].get(port, {}).get('to', '?')}
+            # Step 3: refuse bad samples instead of reporting a false 0.
             if a is None or gap <= 0:
                 row.update(valid=False, reason='port missing from the first reading')
             elif b['rx_packets'] < a['rx_packets'] or b['tx_packets'] < a['tx_packets']:
                 row.update(valid=False, reason='counter reset')
             else:
+                # Step 4: rate = (counter now - counter before) / seconds.
+                #         Dropped and error counts are the increase too.
                 row.update(valid=True,
                            rx_pps=round((b['rx_packets'] - a['rx_packets']) / gap, 1),
                            tx_pps=round((b['tx_packets'] - a['tx_packets']) / gap, 1),
                            rx_dropped=b['rx_dropped'] - a['rx_dropped'],
                            tx_dropped=b['tx_dropped'] - a['tx_dropped'],
                            errors=(b['rx_errors'] - a['rx_errors']) + (b['tx_errors'] - a['tx_errors']))
+            # Step 5: keep the raw totals too, so the arithmetic can be checked.
             row['rx_total'], row['tx_total'] = b['rx_packets'], b['tx_packets']
             rates[name][port] = row
         rates[name]['_seconds'] = round(gap, 2)
@@ -188,8 +213,11 @@ def flow_rates(first, second, seconds):
     """Packets per second on every rule that was there in both readings.
     This names WHO is sending (e.g. one source MAC), not just which port."""
     for name, rules in second.items():
+        # Step 1: each rule's packet count in the first reading, by rule_key.
         before = dict((rule_key(r), r['packets']) for r in first.get(name, []))
         for r in rules:
+            # Step 2: same rule in both readings -> (now - before) / seconds.
+            #         A rule that is new (not in reading 1) gets None, not 0.
             old = before.get(rule_key(r))
             r['pps'] = None if old is None or seconds[name] <= 0 \
                 else round(max(0, r['packets'] - old) / seconds[name], 1)
@@ -206,9 +234,13 @@ def nsot_links(nsot):
     links, seen = [], set()
     for name, sw in nsot['switches'].items():
         for port, p in sw['ports'].items():
+            # Step 1: a port whose "to" is "<switch>:<port>" is a cable to
+            #         another switch; "pc1" or "r1" is a host or the router.
             peer = p.get('to', '')
             if ':' not in peer or peer.split(':')[0] not in nsot['switches']:
                 continue                     # a host or the router, not a link
+            # Step 2: each cable appears at both of its ends in the NSOT;
+            #         keep it once (the sorted pair of ends is its id).
             peer_sw, peer_port = peer.split(':')
             key = tuple(sorted([(name, port), (peer_sw, peer_port)]))
             if key not in seen:
@@ -337,20 +369,26 @@ def summary_lines(state):
                       for n, ports in state['port_rates'].items() for p, r in ports.items()
                       if p != '_seconds' and r.get('valid') and r['rx_pps'] + r['tx_pps'] >= 1),
                      key=lambda x: -x[0])[:3]
+    # Step 4: the three busiest ports (only ports with real traffic).
     for total, n, p, r in busiest:
         out.append('busy port %s:%s (to %s): rx %.1f pps, tx %.1f pps' % (n, p, r['to'], r['rx_pps'], r['tx_pps']))
     return out
 
 
 def main():
+    """Command line: summary (default) or the full snapshot (--json).
+    Exit code 0 = collected, 2 = the controller could not be read."""
+    # Step 1: options.
     ap = argparse.ArgumentParser(description='Collect live network state through the controller REST API.')
     ap.add_argument('--controller', help='IP:port of the controller REST API (default: LAB9_CONTROLLER or the NSOT)')
     ap.add_argument('--seconds', type=float, default=2.0, help='gap between the two readings (default 2)')
     ap.add_argument('--json', action='store_true', help='print the full snapshot as JSON')
     args = ap.parse_args()
 
+    # Step 2: NSOT + controller address, then one snapshot.
     nsot = load_nsot()
     base = controller_url(nsot, args.controller)
+    # Step 3: print it; an unreachable controller is a clear message, not a traceback.
     try:
         state = collect_network_state(nsot, base, args.seconds)
     except Exception as e:
